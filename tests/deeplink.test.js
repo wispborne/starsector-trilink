@@ -7,6 +7,7 @@ const {
   isVersionFile,
   filenameFromURL,
   normalizeVersionData,
+  getDirectDownloadURL,
   extractRemoteLink,
   extractModId,
   extractDependencies,
@@ -173,6 +174,31 @@ describe('normalizeVersionData', () => {
   it('flags non-object input', () => {
     assert.equal(normalizeVersionData(null).error, 'PARSE_FAILED');
     assert.equal(normalizeVersionData('nope').error, 'PARSE_FAILED');
+  });
+
+  it('reads directDownloadURL case-insensitively', () => {
+    const result = normalizeVersionData({ modName: 'M', modVersion: {}, directdownloadurl: 'https://x/mod.zip' });
+    assert.equal(result.data.directDownloadURL, 'https://x/mod.zip');
+  });
+});
+
+describe('getDirectDownloadURL', () => {
+  it('matches the key regardless of case', () => {
+    assert.equal(getDirectDownloadURL({ directDownloadURL: 'https://x/a.zip' }), 'https://x/a.zip');
+    assert.equal(getDirectDownloadURL({ directdownloadurl: 'https://x/b.zip' }), 'https://x/b.zip');
+    assert.equal(getDirectDownloadURL({ DirectDownloadUrl: 'https://x/c.zip' }), 'https://x/c.zip');
+  });
+
+  it('trims and returns the URL', () => {
+    assert.equal(getDirectDownloadURL({ directDownloadURL: '  https://x/d.zip  ' }), 'https://x/d.zip');
+  });
+
+  it('returns null when absent, blank, or not an object', () => {
+    assert.equal(getDirectDownloadURL({ modName: 'M' }), null);
+    assert.equal(getDirectDownloadURL({ directDownloadURL: '   ' }), null);
+    assert.equal(getDirectDownloadURL({ directDownloadURL: null }), null);
+    assert.equal(getDirectDownloadURL(null), null);
+    assert.equal(getDirectDownloadURL('nope'), null);
   });
 });
 

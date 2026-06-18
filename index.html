@@ -36,7 +36,7 @@
                   </span>
                   <span class="tip-line">
                     <span class="material-icons">lightbulb</span>
-                    <span>The optional <strong>Mod ID</strong> (from <code>mod_info.json</code>) combined with a
+                    <span>The <strong>Mod ID</strong> (from <code>mod_info.json</code>) combined with a
                       .version
                       file lets TriOS skip a mod that's already installed.</span>
                   </span>
@@ -47,7 +47,7 @@
               <li><strong>Add your .version url</strong>. Paste the link to your mod's <code>.version</code> file with a
                 working <code>directDownloadURL</code> (recommended) or to your mod's <code>.zip</code>
                 download.</li>
-              <li><strong>Mod ID</strong> <span class="opt">(optional)</span>. Lets
+              <li><strong>Mod ID</strong>. From your <code>mod_info.json</code>. Lets
                 TriOS skip the mod download if it's already installed.</li>
             </ol>
 
@@ -59,7 +59,7 @@
               </div>
               <div class="md-field">
                 <input type="text" id="install-mod-id" placeholder="e.g. nexerelin" autocomplete="off">
-                <label for="install-mod-id">Mod ID (optional)</label>
+                <label for="install-mod-id">Mod ID</label>
               </div>
             </div>
             <br />
@@ -69,7 +69,7 @@
               <input type="file" id="version-file-input" accept=".version,.json,application/json,text/plain" hidden>
               <span class="material-icons">upload_file</span>
               <span class="version-dropzone-text">
-                <strong>Drop a <code>.version</code> or <code>mod_info.json</code> file here</strong>
+                <strong>Drop a <code>.version</code> or <code>mod_info.json</code> file</strong>
               </span>
             </div>
             <span id="version-drop-msg" class="status-msg drop-status"></span>
@@ -79,7 +79,7 @@
             <h2 class="step-title">Dependencies</h2>
             <ol class="how-to" style="counter-reset: step 2">
               <li><strong>Add dependencies</strong> <span class="opt">(optional)</span>. Click <em>Add dependency</em>
-                and paste each required mod's <code>.version</code> or <code>.zip</code> link, and ideally the mod id.
+                and paste each required mod's <code>.version</code> or <code>.zip</code> link and its mod id.
               </li>
             </ol>
 
@@ -91,7 +91,7 @@
               <input type="file" id="dep-add-file-input" accept=".version,.json,application/json,text/plain" hidden>
               <span class="material-icons">upload_file</span>
               <span class="version-dropzone-text">
-                <strong>Drop a <code>.version</code> or <code>mod_info.json</code> to add a dependency</strong>
+                <strong>Drop a <code>.version</code> or <code>mod_info.json</code></strong>
               </span>
             </div>
           </div>
@@ -100,25 +100,28 @@
         <div class="install-output-area">
           <h2 class="step-title">Output</h2>
 
-          <!-- Badge color picker disabled for now (keeping TriOS branding).
-               Re-enable by uncommenting; install.js guards on #install-swatches.
-          <label style="margin-top:16px">Badge color</label>
-          <div id="install-swatches" class="color-swatches">
-            <button class="swatch selected" data-file="badges/install-badge.svg" style="background:#49fcff" title="Cyan"></button>
-            <button class="swatch" data-file="badges/install-badge-blue.svg" style="background:#42a5f5" title="Blue"></button>
-            <button class="swatch" data-file="badges/install-badge-purple.svg" style="background:#ab47bc" title="Purple"></button>
-            <button class="swatch" data-file="badges/install-badge-green.svg" style="background:#66bb6a" title="Green"></button>
-            <button class="swatch" data-file="badges/install-badge-amber.svg" style="background:#ffca28" title="Amber"></button>
-            <button class="swatch" data-file="badges/install-badge-red.svg" style="background:#ef5350" title="Red"></button>
+          <label style="margin-top:16px">Left badge color</label>
+          <div id="install-label-colors" class="color-swatches">
+            <button type="button" class="swatch selected" data-color="" style="background:#1e2c4e" title="TriOS navy"></button>
+            <button type="button" class="swatch" data-color="-gray" style="background:#555555" title="Gray"></button>
           </div>
-          -->
+
+          <label style="margin-top:16px">Right badge color</label>
+          <div id="install-swatches" class="color-swatches">
+            <button type="button" class="swatch selected" data-color="" style="background:#49fcff" title="Cyan"></button>
+            <button type="button" class="swatch" data-color="-blue" style="background:#42a5f5" title="Blue"></button>
+            <button type="button" class="swatch" data-color="-purple" style="background:#ab47bc" title="Purple"></button>
+            <button type="button" class="swatch" data-color="-green" style="background:#66bb6a" title="Green"></button>
+            <button type="button" class="swatch" data-color="-amber" style="background:#ffca28" title="Amber"></button>
+            <button type="button" class="swatch" data-color="-red" style="background:#ef5350" title="Red"></button>
+          </div>
 
           <label style="margin-top:16px">Badge style</label>
           <div id="install-styles" class="style-options">
-            <button type="button" class="style-option selected" data-file="badges/install-badge.svg" title="Flat">
+            <button type="button" class="style-option selected" data-style="" title="Flat">
               <img src="badges/install-badge.svg" alt="Flat badge style">
             </button>
-            <button type="button" class="style-option" data-file="badges/install-badge-forthebadge.svg"
+            <button type="button" class="style-option" data-style="-forthebadge"
               title="For the badge">
               <img src="badges/install-badge-forthebadge.svg" alt="For-the-badge style">
             </button>
@@ -147,10 +150,10 @@
               class="material-icons">content_copy</span>
             Copy</button>
           <textarea id="install-text" readonly rows="3"
-            placeholder="Enter a mod URL above to generate an install link..."></textarea>
+            placeholder="The badge code will appear here when all fields are filled out..."></textarea>
 
           <ol class="how-to" style="counter-reset: step 4; margin-top: 20px">
-            <li><strong>Test it!</strong> Requires TriOS 1.6.0 or later.</li>
+            <li><strong>Test it!</strong> Note: requires TriOS 1.6.0 or later.</li>
           </ol>
         </div>
       </div>
@@ -221,7 +224,7 @@
       <details class="faq-item">
         <summary>What is the Mod ID for?</summary>
         <div class="faq-answer">
-          <p>It's optional but recommended. Combined with a <code>.version</code> URL, it lets TriOS recognize a mod
+          <p>Combined with a <code>.version</code> URL, it lets TriOS recognize a mod
             that's already
             installed and skip re-downloading it so players don't redownload LazyLib 100 times.</p>
         </div>

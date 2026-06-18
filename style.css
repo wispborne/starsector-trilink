@@ -932,6 +932,13 @@ textarea:focus {
   color: var(--accent);
 }
 
+.launcher-logo {
+  display: block;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto;
+}
+
 .launcher-card h1 {
   font-size: 22px;
   font-weight: 500;
@@ -948,21 +955,23 @@ textarea:focus {
 .btn-launch {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   margin-top: 24px;
-  padding: 14px 28px;
-  background: var(--accent);
-  color: var(--surface);
-  border: none;
+  padding: 8px 16px;
+  background: transparent;
+  color: var(--on-surface-dim);
+  border: 1px solid var(--surface-high);
   border-radius: var(--radius-sm);
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   text-decoration: none;
-  transition: opacity 0.2s;
+  transition: border-color 0.2s, color 0.2s;
 }
 
-.btn-launch:hover { opacity: 0.85; }
+.btn-launch:hover { border-color: var(--accent); color: var(--accent); }
+
+.btn-launch .material-icons { font-size: 18px; }
 
 .launcher-malformed {
   margin-top: 20px;
@@ -999,9 +1008,8 @@ textarea:focus {
 .fallback-link .material-icons { font-size: 18px; }
 
 .dep-fallback {
-  margin-top: 20px;
+  margin-top: 10px;
   padding: 14px 16px;
-  background: var(--accent-dim);
   border-radius: var(--radius-sm);
 }
 
@@ -1009,7 +1017,7 @@ textarea:focus {
   text-align: center;
   font-size: 15px;
   font-weight: 500;
-  color: var(--accent);
+  color: var(--on-surface);
   margin-bottom: 12px;
 }
 
@@ -1025,13 +1033,68 @@ textarea:focus {
   justify-content: center;
 }
 
-.fallback-hint {
-  margin-top: 14px;
-  font-size: 12px;
-  color: var(--on-surface-dim);
+.get-trios {
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid var(--surface-high);
+  border-radius: var(--radius-sm);
+  text-align: center;
 }
 
-.fallback-hint a { color: var(--accent); }
+.get-trios-icon {
+  font-size: 28px;
+  color: var(--accent);
+}
+
+.get-trios-text {
+  font-size: 14px;
+  color: var(--on-surface);
+  margin: 6px 0 14px;
+  line-height: 1.5;
+}
+
+.get-trios-text a { color: var(--accent); }
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: transparent;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-secondary:hover { background: var(--accent); color: var(--surface); }
+.btn-secondary .material-icons { font-size: 18px; }
+
+.launcher-footer {
+  margin-top: 20px;
+  padding: 18px 20px;
+  background: var(--surface-variant);
+  border: 1px solid var(--surface-high);
+  border-radius: var(--radius);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--on-surface-dim);
+  text-align: center;
+}
+
+.launcher-footer p { margin: 0; }
+.launcher-footer p + p { margin-top: 10px; }
+.launcher-footer a { color: var(--accent); }
+
+.launcher-footer-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--on-surface);
+}
+
 .launcher-card code {
   font-family: 'Roboto Mono', 'Consolas', monospace;
   font-size: 0.92em;

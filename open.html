@@ -15,12 +15,12 @@
 <body class="launcher-body">
   <main class="launcher">
     <div class="launcher-card">
-      <span class="material-icons launcher-icon" id="launcher-icon">rocket_launch</span>
+      <span class="launcher-icon" id="launcher-icon"><img src="favicon.svg" alt="" class="launcher-logo"></span>
       <h1 id="launcher-title">Opening TriOS…</h1>
       <p id="launcher-subtitle" class="launcher-subtitle"></p>
 
       <a id="launch-btn" class="btn-launch" href="#" hidden>
-        <span class="material-icons">download</span> Install with TriOS
+        <span class="material-icons">refresh</span> Send again
       </a>
 
       <div id="malformed" class="launcher-malformed" hidden>
@@ -29,22 +29,33 @@
       </div>
 
       <div id="fallback" class="launcher-fallback" hidden>
-        <p class="fallback-q">Nothing happened?</p>
+        <p class="fallback-q">Not working?</p>
         <a id="download-link" class="fallback-link" hidden>
           <span class="material-icons">archive</span> <span id="download-text">Download the mod directly</span>
         </a>
 
         <div id="dep-fallback" class="dep-fallback" hidden>
-          <p class="dep-fallback-label">This mod also needs these dependencies:</p>
+          <p class="dep-fallback-label">Mod dependencies</p>
           <div id="dep-links" class="dep-links"></div>
         </div>
 
-        <p class="fallback-hint">
-          You need <a href="https://github.com/wispborne/TriOS" target="_blank" rel="noopener">TriOS</a>
-          installed to handle <code>starsector-mod://</code> install links.
-        </p>
+        <div class="get-trios">
+          <span class="material-icons get-trios-icon">info</span>
+          <p class="get-trios-text">
+            <strong>You need <a href="https://github.com/wispborne/TriOS" target="_blank" rel="noopener">TriOS</a>
+            1.6.0 or newer</strong> installed to automatically download links.
+          </p>
+          <a class="btn-secondary" href="https://github.com/wispborne/TriOS/releases" target="_blank" rel="noopener">
+            <span class="material-icons">download</span> Download TriOS
+          </a>
+        </div>
       </div>
     </div>
+
+    <footer class="launcher-footer">
+      <p class="launcher-footer-title">Want your own "Install with TriOS" button?</p>
+      <p><a href="https://trilink.wispborne.com" target="_blank">https://trilink.wispborne.com/</a></p>
+    </footer>
   </main>
 
   <script src="vendor/hjson.min.js"></script>

@@ -78,9 +78,11 @@ function roundedSolo(w, h, r) {
 const BOLD_FACTOR = 1.08;
 
 // Rendered width of a string under a style's uppercasing and letter-spacing.
-function styledWidth(text, style) {
+// `bold` is passed explicitly because the label and value can differ (the
+// for-the-badge style bolds only the value).
+function styledWidth(text, style, bold) {
   const t = style.upper ? text.toUpperCase() : text;
-  const w = measureText(t) * (style.bold ? BOLD_FACTOR : 1);
+  const w = measureText(t) * (bold ? BOLD_FACTOR : 1);
   return w + style.letterSpacing * t.length;
 }
 
@@ -91,8 +93,8 @@ const STYLES = [
   { suffix: '-forthebadge', H: 28, FS: 11, PADX: 11, R: 0, ICON_X: 8, ICON_SIZE: 16, ICON_GAP: 6, upper: true, bold: true, letterSpacing: 1.25 }
 ];
 
-// Color suffix → value-side fill. '' is the default cyan (install-badge.svg).
-const COLORS = [
+// Value (right) side fill. '' is the default cyan (install-badge.svg).
+const RIGHT_COLORS = [
   ['', '#49fcff'],
   ['-blue', '#42a5f5'],
   ['-purple', '#ab47bc'],
@@ -101,37 +103,51 @@ const COLORS = [
   ['-red', '#ef5350']
 ];
 
-function buildBadge(style, color) {
+// Label (left) side fill. '' is the default TriOS navy; '-gray' is shields gray.
+const LEFT_COLORS = [
+  ['', '#1e2c4e'],
+  ['-gray', '#555555']
+];
+
+function buildBadge(style, color, labelColor) {
   const TEXT_START = style.ICON_X + style.ICON_SIZE + style.ICON_GAP;
-  const labelWidth = round1(TEXT_START + styledWidth(LABEL, style) + style.PADX);
-  const valueWidth = round1(styledWidth(VALUE, style) + style.PADX * 2);
+  // The label is always regular weight; only the value follows style.bold.
+  const labelWidth = round1(TEXT_START + styledWidth(LABEL, style, false) + style.PADX);
+  const valueWidth = round1(styledWidth(VALUE, style, style.bold) + style.PADX * 2);
   const total = Math.round(labelWidth + valueWidth);
   const valW = total - labelWidth;
   const textY = style.H / 2 + style.FS * 0.36;
   const valueX = labelWidth + valW / 2;
   const iconY = (style.H - style.ICON_SIZE) / 2;
-  const weight = style.bold ? 'bold' : 'normal';
-  const FONT = `font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="${style.FS}" font-weight="${weight}"`;
+  const valueWeight = style.bold ? 'bold' : 'normal';
+  const FONT_BASE = `font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="${style.FS}"`;
   const ls = style.letterSpacing ? ` letter-spacing="${style.letterSpacing}"` : '';
   const label = style.upper ? LABEL.toUpperCase() : LABEL;
   const value = style.upper ? VALUE.toUpperCase() : VALUE;
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${total}" height="${style.H}">`
     + `<clipPath id="c"><path d="${roundedSolo(total, style.H, style.R)}"/></clipPath>`
-    + `<rect clip-path="url(#c)" width="${labelWidth}" height="${style.H}" fill="#1e2c4e"/>`
+    + `<rect clip-path="url(#c)" width="${labelWidth}" height="${style.H}" fill="${labelColor}"/>`
     + `<rect clip-path="url(#c)" x="${labelWidth}" width="${valW}" height="${style.H}" fill="${color}"/>`
     + `<svg x="${style.ICON_X}" y="${iconY}" width="${style.ICON_SIZE}" height="${style.ICON_SIZE}" viewBox="0 0 256 256">${ICON}</svg>`
-    + `<g ${FONT}><text x="${TEXT_START}" y="${textY}" fill="#fff"${ls}>${label}</text></g>`
-    + `<g text-anchor="middle" ${FONT}><text x="${valueX}" y="${textY}" fill="${textColorForBg(color)}"${ls}>${value}</text></g>`
+    + `<g ${FONT_BASE} font-weight="normal"><text x="${TEXT_START}" y="${textY}" fill="${textColorForBg(labelColor)}"${ls}>${label}</text></g>`
+    + `<g text-anchor="middle" ${FONT_BASE} font-weight="${valueWeight}"><text x="${valueX}" y="${textY}" fill="${textColorForBg(color)}"${ls}>${value}</text></g>`
     + `</svg>`;
 }
 
 const OUT_DIR = path.join(STATIC, 'badges');
 fs.mkdirSync(OUT_DIR, { recursive: true });
 
+// Clear stale variants (e.g. the old '-match' set) so renames don't leave orphans.
+for (const f of fs.readdirSync(OUT_DIR)) {
+  if (/^install-badge.*\.svg$/.test(f)) fs.unlinkSync(path.join(OUT_DIR, f));
+}
+
 for (const style of STYLES) {
-  for (const [colorSuffix, color] of COLORS) {
-    const file = `install-badge${style.suffix}${colorSuffix}.svg`;
-    fs.writeFileSync(path.join(OUT_DIR, file), buildBadge(style, color));
-    console.log('wrote', 'badges/' + file);
+  for (const [leftSuffix, leftColor] of LEFT_COLORS) {
+    for (const [rightSuffix, rightColor] of RIGHT_COLORS) {
+      const file = `install-badge${style.suffix}${leftSuffix}${rightSuffix}.svg`;
+      fs.writeFileSync(path.join(OUT_DIR, file), buildBadge(style, rightColor, leftColor));
+      console.log('wrote', 'badges/' + file);
+    }
   }
 }

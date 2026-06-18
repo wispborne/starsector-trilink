@@ -27,7 +27,7 @@
   // Malformed link (no mod): show a clear message and stop.
   if (!target) {
     els.title.textContent = 'Malformed install link';
-    els.icon.textContent = 'error_outline';
+    els.icon.innerHTML = '<span class="material-icons">error_outline</span>';
     els.malformed.hidden = false;
     return;
   }
@@ -79,7 +79,7 @@
   }
 
   function showLaunchedState() {
-    els.icon.textContent = 'check_circle';
+    // Keep the TriOS logo showing; only the copy changes.
     els.title.textContent = 'Sent to TriOS';
     els.subtitle.textContent = 'You can close this tab.';
     // Still reveal the fallback quietly in case nothing actually opened.
@@ -111,7 +111,7 @@
     els.downloadLink.href = url;
     els.downloadLink.hidden = false;
     var name = Deeplink.filenameFromURL(url);
-    els.downloadText.textContent = name ? 'Download ' + name : 'Download the mod directly';
+    els.downloadText.textContent = name ? name : 'Download the mod directly';
   }
 
   // For each dependency, add a fallback download link so a manual installer
@@ -126,7 +126,7 @@
       a.className = 'fallback-link dep-link';
       a.target = '_blank';
       a.rel = 'noopener';
-      a.innerHTML = '<span class="material-icons">extension</span> <span class="dep-link-text"></span>';
+      a.innerHTML = '<span class="material-icons">archive</span> <span class="dep-link-text"></span>';
       var textEl = a.querySelector('.dep-link-text');
 
       if (Deeplink.isVersionFile(depUrl)) {
@@ -137,20 +137,17 @@
             var d = result.data;
             var v = Deeplink.formatVersion(d.modVersion);
             var label = d.modName + (v ? ' v' + v : '');
-            if (d.directDownloadURL) {
-              a.href = d.directDownloadURL;
-              textEl.textContent = 'Download ' + label;
-            } else {
-              textEl.textContent = label + ' (open .version)';
-            }
+            textEl.textContent = label;
+            // Link straight to the mod download, not the .version file.
+            if (d.directDownloadURL) a.href = d.directDownloadURL;
           } else {
             // CORS/parse failure: fall back to the raw URL.
-            textEl.textContent = 'Download ' + Deeplink.filenameFromURL(depUrl);
+            textEl.textContent = Deeplink.filenameFromURL(depUrl);
           }
         });
       } else {
         a.href = depUrl;
-        textEl.textContent = 'Download ' + Deeplink.filenameFromURL(depUrl);
+        textEl.textContent = Deeplink.filenameFromURL(depUrl);
       }
 
       els.depLinks.appendChild(a);

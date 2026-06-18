@@ -11,3 +11,6 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# Build artifacts
+starsector-install-link.zip

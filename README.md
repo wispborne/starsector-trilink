@@ -15,7 +15,7 @@ it to GitHub Pages unchanged.
 | `open.html` + `open.js` | The launcher page the badge links to. Reads its query string, fires the `starsector-mod://install?…` scheme, and shows a manual download fallback if no manager handles it. |
 | `install.js` | Generator logic for `index.html`. |
 | `deeplink.js` | Shared pure helpers (scheme builder, `.version` detection/parse/normalize, fetch resolver). |
-| `badges/install-badge*.svg` | The committed badge images — flat + for-the-badge styles, each in cyan/blue/purple/green/amber/red. |
+| `badges/install-badge*.svg` | The committed badge images — flat + for-the-badge styles, right side in cyan/blue/purple/green/amber/red, left side in TriOS navy or gray. |
 | `vendor/hjson.min.js` | Browser build of the HJSON parser used to read `.version` files. |
 | `scripts/gen-install-badges.js` | Dev tool that regenerates the badge SVGs. Self-contained — no dependencies. |
 | `tests/deeplink.test.js` | Unit tests for `deeplink.js`. |

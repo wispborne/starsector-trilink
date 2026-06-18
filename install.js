@@ -16,6 +16,7 @@ const addDepBtn = document.getElementById('add-dep-btn');
 const depAddDropzone = document.getElementById('dep-add-dropzone');
 const depAddFileInput = document.getElementById('dep-add-file-input');
 const installSwatches = document.getElementById('install-swatches');
+const installLabelColors = document.getElementById('install-label-colors');
 const installStyles = document.getElementById('install-styles');
 const installBadgePreview = document.getElementById('install-badge-preview');
 const installText = document.getElementById('install-text');
@@ -58,10 +59,10 @@ function buildOpenUrl(modEntry, deps) {
   return staticBase() + 'open.html?' + Deeplink.buildParams(modEntry, deps).toString();
 }
 
-// A dependency row is incomplete when it names a mod (id) but has no URL — the
-// builder would silently drop it, so flag the row and report the form invalid.
-// A fully blank row, or a URL with no id, is fine. Returns true when every row
-// is complete.
+// Both the URL and the mod ID are required on each dependency. A row that has
+// one but not the other is incomplete, so flag it and report the form invalid;
+// a fully blank row is fine (it's skipped). Returns true when every row is
+// complete.
 function validateDeps() {
   let valid = true;
   installDepsEl.querySelectorAll('.install-dep-row').forEach(row => {
@@ -70,7 +71,10 @@ function validateDeps() {
     const err = row.querySelector('.dep-error');
     if (id && !url) {
       valid = false;
-      setStatus(err, 'Add this dependency’s .version or .zip link, or clear the mod ID.', 'error');
+      setStatus(err, 'Add this dependency’s .version or .zip link.', 'error');
+    } else if (url && !id) {
+      valid = false;
+      setStatus(err, 'Add this dependency’s mod ID.', 'error');
     } else {
       setStatus(err, '');
     }
@@ -91,6 +95,7 @@ function formatOutput(openUrl, badgeImg) {
 
 function updateInstallOutput() {
   const modUrl = installModInput.value.trim();
+  const modId = installModIdInput.value.trim();
   const badgeImg = staticBase() + installBadgeFile;
 
   // Always refresh the badge preview image.
@@ -100,16 +105,17 @@ function updateInstallOutput() {
   img.alt = 'install badge preview';
   installBadgePreview.appendChild(img);
 
-  // A mod URL is required, and every dependency must be complete; otherwise
-  // block output so we never emit a link that silently drops a dependency.
+  // The mod URL and mod ID are both required, and every dependency must be
+  // complete; otherwise block output so we never emit a link that silently
+  // drops a dependency.
   const depsValid = validateDeps();
-  if (!modUrl || !depsValid) {
+  if (!modUrl || !modId || !depsValid) {
     installText.value = '';
     copyInstallBtn.disabled = true;
     return;
   }
 
-  const modEntry = { url: modUrl, id: installModIdInput.value.trim() || null };
+  const modEntry = { url: modUrl, id: modId };
   const openUrl = buildOpenUrl(modEntry, depEntries());
   installText.value = formatOutput(openUrl, badgeImg);
   copyInstallBtn.disabled = false;
@@ -139,8 +145,16 @@ function previewVersion(url, targetEl) {
     if (targetEl.dataset.url !== url) return;
     if (result && result.data) {
       const v = Deeplink.formatVersion(result.data.modVersion);
-      targetEl.textContent = '✓ ' + result.data.modName + (v ? ' v' + v : '');
-      targetEl.className = 'install-preview ok';
+      const label = result.data.modName + (v ? ' v' + v : '');
+      if (!result.data.directDownloadURL) {
+        // Resolved fine but has no directDownloadURL — the one-click install has
+        // nothing to download, so warn instead of showing a green check.
+        targetEl.textContent = '⚠ ' + label + ' has no directDownloadURL — one-click install won’t work.';
+        targetEl.className = 'install-preview warn';
+      } else {
+        targetEl.textContent = '✓ ' + label;
+        targetEl.className = 'install-preview ok';
+      }
     } else {
       // Couldn't fetch the .version (cross-origin block) — the link still works,
       // so present it as a success; we just can't show the resolved mod name.
@@ -250,7 +264,7 @@ function addDepRow(url, id, focusInput) {
   wireDropTarget(row, depTargets);
 
   // Resolved mod name sits at the top, labeling this dependency's field group.
-  row.append(preview, top, depError, mdField(idInput, 'Mod ID (optional)'), dropZone, dropMsg);
+  row.append(preview, top, depError, mdField(idInput, 'Mod ID'), dropZone, dropMsg);
   installDepsEl.appendChild(row);
   if (focusInput !== false) input.focus();
   return row;
@@ -328,6 +342,13 @@ function processModFile(file, targets) {
       return;
     }
     if (result.kind === 'version' && targets.urlInput) {
+      // A .version without a directDownloadURL can't drive a one-click install —
+      // TriOS would have nothing to fetch — so reject it rather than generate a
+      // dead link. The key is matched case-insensitively.
+      if (!Deeplink.getDirectDownloadURL(parsed)) {
+        setStatus(targets.msg, `${file.name} has no directDownloadURL, so one-click installs won't download the mod. Add one to your .version file.`, 'error');
+        return;
+      }
       targets.urlInput.value = result.url;
       setStatus(targets.msg, ''); // clear any prior error; success is silent
     } else if (result.kind === 'modinfo' && targets.idInput) {
@@ -440,28 +461,61 @@ if (depAddDropzone) {
 }
 if (installDepsEl) wireDropTarget(installDepsEl.closest('.install-controls'), newDepTargets);
 
-// Badge color picker is currently disabled (see install.html); guard so the
-// rest of the generator still works. installBadgeFile stays at its default.
+// Badge appearance: the style picker, the left-color swatches, and the
+// right-color swatches each contribute a filename suffix, combined into
+// installBadgeFile (badges/install-badge[-style][-left][-right].svg). Tracking
+// them separately lets the pickers coexist instead of clobbering each other.
+let installBadgeStyle = '';
+let installBadgeColor = '';
+let installBadgeLabel = '';
+function applyBadgeFile() {
+  installBadgeFile = `badges/install-badge${installBadgeStyle}${installBadgeLabel}${installBadgeColor}.svg`;
+  updateInstallOutput();
+}
+
+// Repaint the style-option thumbnails so each shows the currently selected
+// color and label color, keeping the style picker's previews in sync.
+function updateStylePreviews() {
+  installStyles?.querySelectorAll('.style-option').forEach(btn => {
+    const img = btn.querySelector('img');
+    if (img) img.src = `badges/install-badge${btn.dataset.style}${installBadgeLabel}${installBadgeColor}.svg`;
+  });
+}
+
+// Badge color picker (cyan/blue/purple/green/amber/red).
 if (installSwatches) {
   installSwatches.querySelectorAll('.swatch').forEach(btn => {
     btn.addEventListener('click', () => {
       installSwatches.querySelector('.swatch.selected')?.classList.remove('selected');
       btn.classList.add('selected');
-      installBadgeFile = btn.dataset.file;
-      updateInstallOutput();
+      installBadgeColor = btn.dataset.color;
+      updateStylePreviews();
+      applyBadgeFile();
     });
   });
 }
 
-// Badge style picker (flat vs. for-the-badge). Each option carries the SVG
-// filename to use in the generated link.
+// Left-side (label) color picker — same swatch UI and palette as the right.
+if (installLabelColors) {
+  installLabelColors.querySelectorAll('.swatch').forEach(btn => {
+    btn.addEventListener('click', () => {
+      installLabelColors.querySelector('.swatch.selected')?.classList.remove('selected');
+      btn.classList.add('selected');
+      installBadgeLabel = btn.dataset.color;
+      updateStylePreviews();
+      applyBadgeFile();
+    });
+  });
+}
+
+// Badge style picker (flat vs. for-the-badge).
 if (installStyles) {
   installStyles.querySelectorAll('.style-option').forEach(btn => {
     btn.addEventListener('click', () => {
       installStyles.querySelector('.style-option.selected')?.classList.remove('selected');
       btn.classList.add('selected');
-      installBadgeFile = btn.dataset.file;
-      updateInstallOutput();
+      installBadgeStyle = btn.dataset.style;
+      applyBadgeFile();
     });
   });
 }

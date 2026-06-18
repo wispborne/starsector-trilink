@@ -84,6 +84,22 @@
     return major + '.' + minor + patch; // non-numeric patch: append without a dot
   }
 
+  // Pull the directDownloadURL out of a parsed .version object, matching the key
+  // case-insensitively — authors hand-write these files and the casing drifts
+  // (directdownloadurl, DirectDownloadUrl, …). Returns the trimmed URL string, or
+  // null when the field is absent or blank. Pure, so it is unit-testable.
+  function getDirectDownloadURL(parsed) {
+    if (!parsed || typeof parsed !== 'object') return null;
+    for (var key in parsed) {
+      if (Object.prototype.hasOwnProperty.call(parsed, key) && key.toLowerCase() === 'directdownloadurl') {
+        var val = parsed[key];
+        var str = val != null && String(val).trim();
+        return str || null;
+      }
+    }
+    return null;
+  }
+
   // Normalize an already-parsed .version object. Mirrors fetcher.js normalization.
   // Returns { data } or { error } — pure, so it is unit-testable without a network.
   function normalizeVersionData(parsed) {
@@ -98,7 +114,7 @@
           minor: String(mv.minor != null ? mv.minor : '0'),
           patch: String(mv.patch != null ? mv.patch : '0')
         },
-        directDownloadURL: parsed.directDownloadURL || null,
+        directDownloadURL: getDirectDownloadURL(parsed),
         modThreadId: parsed.modThreadId != null ? String(parsed.modThreadId) : null
       }
     };
@@ -191,6 +207,7 @@
     filenameFromURL: filenameFromURL,
     formatVersion: formatVersion,
     normalizeVersionData: normalizeVersionData,
+    getDirectDownloadURL: getDirectDownloadURL,
     extractRemoteLink: extractRemoteLink,
     extractModId: extractModId,
     extractDependencies: extractDependencies,
