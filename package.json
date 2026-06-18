@@ -1,7 +1,7 @@
 {
-  "name": "starsector-install-with-trios",
+  "name": "trilink",
   "version": "1.0.0",
-  "description": "Standalone client-side site that generates one-click \"Install with TriOS\" links for Starsector mod forum posts.",
+  "description": "TriLink — standalone client-side site that generates one-click \"Install with TriOS\" links for Starsector mod forum posts.",
   "scripts": {
     "test": "node --test tests/*.test.js",
     "gen-badges": "node scripts/gen-install-badges.js"

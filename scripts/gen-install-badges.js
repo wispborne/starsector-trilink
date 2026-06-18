@@ -1,6 +1,7 @@
 /*
- * Generates the static "Install with TriOS" badge SVGs (default + color
- * variants) into the site root. Run after changing the label, icon, or palette:
+ * Generates the static "Install with TriOS" badge SVGs (flat + for-the-badge
+ * styles, each in color variants) into the badges/ folder. Run after changing
+ * the label, icon, styles, or palette:
  *
  *   node scripts/gen-install-badges.js
  *
@@ -56,9 +57,6 @@ const ICON =
 
 const LABEL = 'Install with';
 const VALUE = 'TriOS';
-const H = 22, FS = 11, PADX = 8, R = 4;
-const ICON_X = 6, ICON_SIZE = 15, ICON_GAP = 5;
-const TEXT_START = ICON_X + ICON_SIZE + ICON_GAP;
 
 function round1(n) { return Math.round(n * 10) / 10; }
 
@@ -69,37 +67,71 @@ function textColorForBg(hex) {
   return (0.299 * r + 0.587 * g + 0.114 * b) / 255 > 0.5 ? '#1a1a2e' : '#fff';
 }
 
+// r=0 yields a plain rectangle (square corners); r>0 rounds all four corners.
 function roundedSolo(w, h, r) {
+  if (!r) return `M0,0H${w}V${h}H0Z`;
   return `M${r},0H${w - r}A${r},${r},0,0,1,${w},${r}V${h - r}A${r},${r},0,0,1,${w - r},${h}H${r}A${r},${r},0,0,1,0,${h - r}V${r}A${r},${r},0,0,1,${r},0Z`;
 }
 
-const labelWidth = round1(TEXT_START + measureText(LABEL, 'default') + PADX);
-const valueWidth = round1(measureText(VALUE, 'default') + PADX * 2);
-const total = Math.round(labelWidth + valueWidth);
-const valW = total - labelWidth;
-const textY = H / 2 + FS * 0.36;
-const valueX = labelWidth + valW / 2;
-const iconY = (H - ICON_SIZE) / 2;
-const FONT = 'font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="11" font-weight="normal"';
+// Bold glyphs render wider than the regular-weight measurement table predicts,
+// so nudge bold styles up to keep the label/value padding correct.
+const BOLD_FACTOR = 1.08;
 
-const variants = [
-  ['install-badge.svg', '#49fcff'],
-  ['install-badge-blue.svg', '#42a5f5'],
-  ['install-badge-purple.svg', '#ab47bc'],
-  ['install-badge-green.svg', '#66bb6a'],
-  ['install-badge-amber.svg', '#ffca28'],
-  ['install-badge-red.svg', '#ef5350']
+// Rendered width of a string under a style's uppercasing and letter-spacing.
+function styledWidth(text, style) {
+  const t = style.upper ? text.toUpperCase() : text;
+  const w = measureText(t) * (style.bold ? BOLD_FACTOR : 1);
+  return w + style.letterSpacing * t.length;
+}
+
+// Badge styles. '' is the original flat look; '-forthebadge' mirrors
+// shields.io's "for-the-badge" — tall, square-cornered, bold spaced uppercase.
+const STYLES = [
+  { suffix: '', H: 22, FS: 11, PADX: 8, R: 4, ICON_X: 6, ICON_SIZE: 15, ICON_GAP: 5, upper: false, bold: false, letterSpacing: 0 },
+  { suffix: '-forthebadge', H: 28, FS: 11, PADX: 11, R: 0, ICON_X: 8, ICON_SIZE: 16, ICON_GAP: 6, upper: true, bold: true, letterSpacing: 1.25 }
 ];
 
-for (const [file, color] of variants) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${total}" height="${H}">`
-    + `<clipPath id="c"><path d="${roundedSolo(total, H, R)}"/></clipPath>`
-    + `<rect clip-path="url(#c)" width="${labelWidth}" height="${H}" fill="#1e2c4e"/>`
-    + `<rect clip-path="url(#c)" x="${labelWidth}" width="${valW}" height="${H}" fill="${color}"/>`
-    + `<svg x="${ICON_X}" y="${iconY}" width="${ICON_SIZE}" height="${ICON_SIZE}" viewBox="0 0 256 256">${ICON}</svg>`
-    + `<g ${FONT}><text x="${TEXT_START}" y="${textY}" fill="#fff">${LABEL}</text></g>`
-    + `<g text-anchor="middle" ${FONT}><text x="${valueX}" y="${textY}" fill="${textColorForBg(color)}">${VALUE}</text></g>`
+// Color suffix → value-side fill. '' is the default cyan (install-badge.svg).
+const COLORS = [
+  ['', '#49fcff'],
+  ['-blue', '#42a5f5'],
+  ['-purple', '#ab47bc'],
+  ['-green', '#66bb6a'],
+  ['-amber', '#ffca28'],
+  ['-red', '#ef5350']
+];
+
+function buildBadge(style, color) {
+  const TEXT_START = style.ICON_X + style.ICON_SIZE + style.ICON_GAP;
+  const labelWidth = round1(TEXT_START + styledWidth(LABEL, style) + style.PADX);
+  const valueWidth = round1(styledWidth(VALUE, style) + style.PADX * 2);
+  const total = Math.round(labelWidth + valueWidth);
+  const valW = total - labelWidth;
+  const textY = style.H / 2 + style.FS * 0.36;
+  const valueX = labelWidth + valW / 2;
+  const iconY = (style.H - style.ICON_SIZE) / 2;
+  const weight = style.bold ? 'bold' : 'normal';
+  const FONT = `font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="${style.FS}" font-weight="${weight}"`;
+  const ls = style.letterSpacing ? ` letter-spacing="${style.letterSpacing}"` : '';
+  const label = style.upper ? LABEL.toUpperCase() : LABEL;
+  const value = style.upper ? VALUE.toUpperCase() : VALUE;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${total}" height="${style.H}">`
+    + `<clipPath id="c"><path d="${roundedSolo(total, style.H, style.R)}"/></clipPath>`
+    + `<rect clip-path="url(#c)" width="${labelWidth}" height="${style.H}" fill="#1e2c4e"/>`
+    + `<rect clip-path="url(#c)" x="${labelWidth}" width="${valW}" height="${style.H}" fill="${color}"/>`
+    + `<svg x="${style.ICON_X}" y="${iconY}" width="${style.ICON_SIZE}" height="${style.ICON_SIZE}" viewBox="0 0 256 256">${ICON}</svg>`
+    + `<g ${FONT}><text x="${TEXT_START}" y="${textY}" fill="#fff"${ls}>${label}</text></g>`
+    + `<g text-anchor="middle" ${FONT}><text x="${valueX}" y="${textY}" fill="${textColorForBg(color)}"${ls}>${value}</text></g>`
     + `</svg>`;
-  fs.writeFileSync(path.join(STATIC, file), svg);
-  console.log('wrote', file, `(${total}×${H})`);
+}
+
+const OUT_DIR = path.join(STATIC, 'badges');
+fs.mkdirSync(OUT_DIR, { recursive: true });
+
+for (const style of STYLES) {
+  for (const [colorSuffix, color] of COLORS) {
+    const file = `install-badge${style.suffix}${colorSuffix}.svg`;
+    fs.writeFileSync(path.join(OUT_DIR, file), buildBadge(style, color));
+    console.log('wrote', 'badges/' + file);
+  }
 }

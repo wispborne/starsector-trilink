@@ -1,5 +1,5 @@
 /*
- * Install-with-TriOS link generator (fully client-side).
+ * TriLink — install-link generator (fully client-side).
  * Builds a forum-safe link to open.html that relays a starsector-mod:// install
  * intent to TriOS. Depends on deeplink.js (Deeplink global) and the vendored
  * Hjson parser.
@@ -14,11 +14,12 @@ const installModPreview = document.getElementById('install-mod-preview');
 const installDepsEl = document.getElementById('install-deps');
 const addDepBtn = document.getElementById('add-dep-btn');
 const installSwatches = document.getElementById('install-swatches');
+const installStyles = document.getElementById('install-styles');
 const installBadgePreview = document.getElementById('install-badge-preview');
 const installText = document.getElementById('install-text');
 const copyInstallBtn = document.getElementById('copy-install');
 
-let installBadgeFile = 'install-badge.svg';
+let installBadgeFile = 'badges/install-badge.svg';
 let installDebounce = null;
 
 function copyToClipboard(text, btn) {
@@ -236,6 +237,19 @@ if (installSwatches) {
   installSwatches.querySelectorAll('.swatch').forEach(btn => {
     btn.addEventListener('click', () => {
       installSwatches.querySelector('.swatch.selected')?.classList.remove('selected');
+      btn.classList.add('selected');
+      installBadgeFile = btn.dataset.file;
+      updateInstallOutput();
+    });
+  });
+}
+
+// Badge style picker (flat vs. for-the-badge). Each option carries the SVG
+// filename to use in the generated link.
+if (installStyles) {
+  installStyles.querySelectorAll('.style-option').forEach(btn => {
+    btn.addEventListener('click', () => {
+      installStyles.querySelector('.style-option.selected')?.classList.remove('selected');
       btn.classList.add('selected');
       installBadgeFile = btn.dataset.file;
       updateInstallOutput();

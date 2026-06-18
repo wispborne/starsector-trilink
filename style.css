@@ -679,6 +679,31 @@ textarea:focus {
 
 .install-badge-preview img { display: block; }
 
+/* Badge style picker — each option shows the badge it produces. */
+.style-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.style-option {
+  display: flex;
+  align-items: center;
+  padding: 6px 8px;
+  background: var(--surface-variant);
+  border: 2px solid var(--surface-high);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.15s;
+}
+
+.style-option:hover { transform: translateY(-1px); }
+
+.style-option.selected { border-color: var(--accent); }
+
+.style-option img { display: block; max-width: 100%; height: auto; }
+
 /* ---- Launcher page (open.html) ---- */
 
 .launcher-body {

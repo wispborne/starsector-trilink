@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Starsector Install with TriOS</title>
+  <title>TriLink: Starsector mod install links</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,32 +13,44 @@
   <!-- Relative paths so this page works standalone on GitHub Pages under any subpath -->
   <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
   <header>
-    <h1><span class="material-icons">download</span> Install with TriOS</h1>
+    <h1><span class="material-icons">download</span> TriLink</h1>
     <p class="subtitle">Generate a one-click link that installs your mod through TriOS</p>
   </header>
 
   <main>
     <section class="install-section">
-      <p class="section-desc">Make a one-click install button for your mod's forum post. Fill in the fields below, then copy the code into your post — anyone with TriOS can install your mod (and its dependencies) in one click.</p>
-
       <ol class="how-to">
-        <li><strong>Your mod</strong> — paste the link to your mod's <code>.version</code> file (recommended: it auto-updates every release). No <code>.version</code> file? Paste a direct link to your mod's <code>.zip</code> download instead.</li>
-        <li><strong>Mod ID</strong> <span class="opt">(optional)</span> — the <code>id</code> value from your <code>mod_info.json</code>. Lets TriOS skip the mod if it's already installed.</li>
-        <li><strong>Dependencies</strong> <span class="opt">(optional)</span> — click <em>Add dependency</em> and paste each required mod's <code>.version</code> or <code>.zip</code> link. Each one can have its own ID.</li>
-        <li><strong>Copy &amp; paste</strong> — leave the format on <em>BBCode badge</em>, click <em>Copy</em>, and paste it into your forum post. That's it.</li>
+        <li><strong>Add your .version url</strong>. Paste the link to your mod's <code>.version</code> file with a
+          working <code>directDownloadURL</code>. Don't have one? Paste a link to your mod's <code>.zip</code> download
+          instead.</li>
+        <li><strong>Mod ID</strong> <span class="opt">(optional)</span>. From your <code>mod_info.json</code>. Lets
+          TriOS skip the mod download if it's already installed.</li>
+        <li><strong>Dependencies</strong> <span class="opt">(optional)</span>. Click <em>Add dependency</em> and paste
+          each required mod's <code>.version</code> or <code>.zip</code> link, and ideally the mod id.</li>
+        <li><strong>Copy &amp; paste</strong>. Click <em>Copy</em>, and paste it into your forum post. Test it out!
+          Requires TriOS 1.6.0 or later.</li>
+        <li><strong>Test it!</strong> Requires TriOS 1.6.0 or later.</li>
       </ol>
 
       <div class="install-layout">
         <div class="install-controls">
           <p class="install-tip">
             <span class="material-icons">lightbulb</span>
-            <span>Prefer a <code>.version</code> file URL over a direct download — it self-updates with each release.<br>
-            The optional <strong>Mod ID</strong> (from <code>mod_info.json</code>) lets TriOS skip a mod that's already installed.</span>
+            <span>A <code>.version</code> file URL is better than a mod download link; it updates whenever you update
+              your version file and helps avoid unnecessary redownloads.</span>
           </p>
 
-          <label style="margin-top:16px">Your mod</label>
+          <p class="install-tip">
+            <span class="material-icons">lightbulb</span>
+            <span>The optional <strong>Mod ID</strong> (from <code>mod_info.json</code>) combined with a .version file
+              lets TriOS skip a mod that's
+              already installed.</span>
+          </p>
+
+          <label style="margin-top:16px"><strong>Your mod</strong></label>
           <div class="install-card">
             <p id="install-mod-preview" class="install-preview"></p>
             <div class="md-field">
@@ -50,21 +63,10 @@
             </div>
           </div>
 
-          <label style="margin-top:16px">Dependencies</label>
+          <label style="margin-top:16px"><strong>Your mod's dependencies</strong></label>
           <div id="install-deps" class="install-deps"></div>
           <button id="add-dep-btn" class="btn-add-dep"><span class="material-icons">add</span> Add dependency</button>
 
-          <hr class="install-divider">
-
-          <label>Load from an existing link <span class="label-hint">— paste a generated link or BBCode to edit it</span></label>
-          <div class="input-row">
-            <div class="md-field">
-              <input type="text" id="install-import" placeholder="open.html?… / starsector-mod://… / [url=…]" autocomplete="off">
-              <label for="install-import">Paste a link or BBCode</label>
-            </div>
-            <button id="install-import-btn" class="btn-primary"><span class="material-icons">input</span> Load</button>
-          </div>
-          <p id="install-import-msg" class="status-msg"></p>
         </div>
 
         <div class="install-output-area">
@@ -72,32 +74,62 @@
                Re-enable by uncommenting; install.js guards on #install-swatches.
           <label>Badge color</label>
           <div id="install-swatches" class="color-swatches">
-            <button class="swatch selected" data-file="install-badge.svg" style="background:#49fcff" title="Cyan"></button>
-            <button class="swatch" data-file="install-badge-blue.svg" style="background:#42a5f5" title="Blue"></button>
-            <button class="swatch" data-file="install-badge-purple.svg" style="background:#ab47bc" title="Purple"></button>
-            <button class="swatch" data-file="install-badge-green.svg" style="background:#66bb6a" title="Green"></button>
-            <button class="swatch" data-file="install-badge-amber.svg" style="background:#ffca28" title="Amber"></button>
-            <button class="swatch" data-file="install-badge-red.svg" style="background:#ef5350" title="Red"></button>
+            <button class="swatch selected" data-file="badges/install-badge.svg" style="background:#49fcff" title="Cyan"></button>
+            <button class="swatch" data-file="badges/install-badge-blue.svg" style="background:#42a5f5" title="Blue"></button>
+            <button class="swatch" data-file="badges/install-badge-purple.svg" style="background:#ab47bc" title="Purple"></button>
+            <button class="swatch" data-file="badges/install-badge-green.svg" style="background:#66bb6a" title="Green"></button>
+            <button class="swatch" data-file="badges/install-badge-amber.svg" style="background:#ffca28" title="Amber"></button>
+            <button class="swatch" data-file="badges/install-badge-red.svg" style="background:#ef5350" title="Red"></button>
           </div>
           -->
+
+          <label>Badge style</label>
+          <div id="install-styles" class="style-options">
+            <button type="button" class="style-option selected" data-file="badges/install-badge.svg" title="Flat">
+              <img src="badges/install-badge.svg" alt="Flat badge style">
+            </button>
+            <button type="button" class="style-option" data-file="badges/install-badge-forthebadge.svg" title="For the badge">
+              <img src="badges/install-badge-forthebadge.svg" alt="For-the-badge style">
+            </button>
+          </div>
 
           <h3>Preview</h3>
           <div id="install-badge-preview" class="install-badge-preview"></div>
 
           <label style="margin-top:16px">Output format</label>
           <div class="radio-group install-formats">
-            <label class="radio-label"><input type="radio" name="install-format" value="bbcode" checked> BBCode badge</label>
-            <label class="radio-label"><input type="radio" name="install-format" value="bbcode-text"> BBCode text</label>
+            <label class="radio-label"><input type="radio" name="install-format" value="bbcode" checked> BBCode
+              badge</label>
+            <label class="radio-label"><input type="radio" name="install-format" value="bbcode-text"> BBCode
+              text</label>
             <label class="radio-label"><input type="radio" name="install-format" value="raw"> Raw URL</label>
             <label class="radio-label"><input type="radio" name="install-format" value="html"> HTML</label>
           </div>
 
           <div class="bbcode-header" style="margin-top:12px">
             <h3>Output</h3>
-            <button id="copy-install" class="btn-copy" disabled><span class="material-icons">content_copy</span> Copy</button>
+            <button id="copy-install" class="btn-copy" disabled><span class="material-icons">content_copy</span>
+              Copy</button>
           </div>
-          <textarea id="install-text" readonly rows="3" placeholder="Enter a mod URL above to generate an install link..."></textarea>
+          <textarea id="install-text" readonly rows="3"
+            placeholder="Enter a mod URL above to generate an install link..."></textarea>
         </div>
+      </div>
+
+      <div class="install-import-section">
+        <hr class="install-divider">
+
+        <label>Restore from an existing link:<span class="label-hint"> paste a generated link or BBCode to edit
+            it</span></label>
+        <div class="input-row">
+          <div class="md-field">
+            <input type="text" id="install-import" placeholder="open.html?… / starsector-mod://… / [url=…]"
+              autocomplete="off">
+            <label for="install-import">Paste a link or BBCode</label>
+          </div>
+          <button id="install-import-btn" class="btn-primary"><span class="material-icons">input</span> Load</button>
+        </div>
+        <p id="install-import-msg" class="status-msg"></p>
       </div>
     </section>
   </main>
@@ -106,4 +138,5 @@
   <script src="deeplink.js"></script>
   <script src="install.js"></script>
 </body>
+
 </html>

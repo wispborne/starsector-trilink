@@ -1,6 +1,6 @@
-# Starsector — Install with TriOS
+# TriLink
 
-A fully **client-side, no-backend** site that lets Starsector mod authors generate a one-click
+**TriLink** is a fully **client-side, no-backend** site that lets Starsector mod authors generate a one-click
 **"Install with TriOS"** button for their forum posts. A reader who has [TriOS](https://github.com/wispborne/TriOS)
 installed clicks the badge and the mod (and any dependencies) installs in one step.
 
@@ -15,7 +15,7 @@ it to GitHub Pages unchanged.
 | `open.html` + `open.js` | The launcher page the badge links to. Reads its query string, fires the `starsector-mod://install?…` scheme, and shows a manual download fallback if no manager handles it. |
 | `install.js` | Generator logic for `index.html`. |
 | `deeplink.js` | Shared pure helpers (scheme builder, `.version` detection/parse/normalize, fetch resolver). |
-| `install-badge*.svg` | The committed badge images (default cyan + blue/purple/green/amber/red variants). |
+| `badges/install-badge*.svg` | The committed badge images — flat + for-the-badge styles, each in cyan/blue/purple/green/amber/red. |
 | `vendor/hjson.min.js` | Browser build of the HJSON parser used to read `.version` files. |
 | `scripts/gen-install-badges.js` | Dev tool that regenerates the badge SVGs. Self-contained — no dependencies. |
 | `tests/deeplink.test.js` | Unit tests for `deeplink.js`. |
