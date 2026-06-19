@@ -20,9 +20,17 @@
   };
 
   var query = new URLSearchParams(window.location.search);
-  var mod = Deeplink.parseEntry(query.get('mod'));
-  var deps = query.getAll('dep').map(Deeplink.parseEntry).filter(Boolean);
+  // Normalize GitHub blob URLs to raw here too: older buttons were generated
+  // before install.js did this, so their query params still carry the blob URL
+  // that neither TriOS nor the .version fetch can read.
+  var mod = normalizeEntry(Deeplink.parseEntry(query.get('mod')));
+  var deps = query.getAll('dep').map(Deeplink.parseEntry).filter(Boolean).map(normalizeEntry);
   var target = Deeplink.buildSchemeTarget(mod, deps);
+
+  function normalizeEntry(entry) {
+    if (entry) entry.url = Deeplink.toRawGithubURL(entry.url);
+    return entry;
+  }
 
   // Malformed link (no mod): show a clear message and stop.
   if (!target) {
