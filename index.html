@@ -47,8 +47,8 @@
               <li><strong>Add your .version url</strong>. Paste the link to your mod's <code>.version</code> file with a
                 working <code>directDownloadURL</code> or to your mod's <code>.zip</code>
                 download.</li>
-              <li><strong>Mod ID</strong>. From your <code>mod_info.json</code>. Lets
-                TriOS skip the mod download if it's already installed.</li>
+              <li><strong>Mod ID &amp; version</strong>. From your <code>mod_info.json</code> /
+                <code>.version</code>. Lets TriOS skip the mod download if it's already installed.</li>
             </ol>
 
             <div class="install-card">
@@ -57,9 +57,15 @@
                 <input type="url" id="install-mod" placeholder="https://.../mod_info.version" autocomplete="off">
                 <label for="install-mod">Link to .version file or .zip</label>
               </div>
-              <div class="md-field">
-                <input type="text" id="install-mod-id" placeholder="e.g. nexerelin" autocomplete="off">
-                <label for="install-mod-id">Mod ID</label>
+              <div class="input-row">
+                <div class="md-field">
+                  <input type="text" id="install-mod-id" placeholder="e.g. nexerelin" autocomplete="off">
+                  <label for="install-mod-id">Mod ID</label>
+                </div>
+                <div class="md-field">
+                  <input type="text" id="install-mod-version" placeholder="e.g. 1.2.3" autocomplete="off">
+                  <label for="install-mod-version">Version</label>
+                </div>
               </div>
             </div>
             <br />
@@ -79,7 +85,8 @@
             <h2 class="step-title">Dependencies</h2>
             <ol class="how-to" style="counter-reset: step 2">
               <li><strong>Add dependencies</strong> <span class="opt">(optional)</span>. Click <em>Add dependency</em>
-                and paste each required mod's <code>.version</code> or <code>.zip</code> link and its mod id.
+                and paste each required mod's <code>.version</code> or <code>.zip</code> link, its mod id, and its
+                version.
               </li>
             </ol>
 
@@ -213,20 +220,18 @@
       <details class="faq-item">
         <summary>Should I use a .version URL or a .zip link?</summary>
         <div class="faq-answer">
-          <p>A <code>.version</code> file URL if you can. It includes the mod version, which lets TriOS skip a
-            mod that's already installed if you include the mod id as well. It also means you only have to update
+          <p>A <code>.version</code> file URL if you can. It auto-fills the mod version. It also means you only have to update
             your .version file if your download links change, not this button.</p>
           <br />
-          <p>A <code>.zip</code> link works too, but it's a fixed direct download.</p>
+          <p>A <code>.zip</code> (or .7z, .rar, etc) link works too.</p>
         </div>
       </details>
 
       <details class="faq-item">
-        <summary>What is the Mod ID for?</summary>
+        <summary>What is the Mod ID and Version for?</summary>
         <div class="faq-answer">
-          <p>Combined with a <code>.version</code> URL, it lets TriOS recognize a mod
-            that's already
-            installed and skip re-downloading it so players don't redownload LazyLib 100 times.</p>
+          <p>The mod id and version let TriOS recognize a mod
+            that's already installed and skip re-downloading it so players don't redownload LazyLib 100 times.</p>
         </div>
       </details>
 
@@ -313,6 +318,7 @@ SOFTWARE.</pre>
   </dialog>
 
   <script src="vendor/hjson.min.js"></script>
+  <script src="version.js"></script>
   <script src="deeplink.js"></script>
   <script src="install.js"></script>
 </body>

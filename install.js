@@ -10,6 +10,7 @@ const installImportBtn = document.getElementById('install-import-btn');
 const installImportMsg = document.getElementById('install-import-msg');
 const installModInput = document.getElementById('install-mod');
 const installModIdInput = document.getElementById('install-mod-id');
+const installModVersionInput = document.getElementById('install-mod-version');
 const installModPreview = document.getElementById('install-mod-preview');
 const installDepsEl = document.getElementById('install-deps');
 const addDepBtn = document.getElementById('add-dep-btn');
@@ -46,12 +47,13 @@ function staticBase() {
   return new URL('.', window.location.href).href;
 }
 
-// Collect dependency rows as entries { url, id }, skipping rows with no URL.
+// Collect dependency rows as entries { url, id, version }, skipping rows with no URL.
 function depEntries() {
   return Array.from(installDepsEl.querySelectorAll('.install-dep-row')).map(row => {
     const url = Deeplink.toRawGithubURL(row.querySelector('.dep-url').value.trim());
     const id = row.querySelector('.dep-id').value.trim();
-    return url ? { url, id: id || null } : null;
+    const version = row.querySelector('.dep-version').value.trim();
+    return url ? { url, id: id || null, version: version || null } : null;
   }).filter(Boolean);
 }
 
@@ -59,22 +61,28 @@ function buildOpenUrl(modEntry, deps) {
   return staticBase() + 'open.html?' + Deeplink.buildParams(modEntry, deps).toString();
 }
 
-// Both the URL and the mod ID are required on each dependency. A row that has
-// one but not the other is incomplete, so flag it and report the form invalid;
-// a fully blank row is fine (it's skipped). Returns true when every row is
-// complete.
+// The URL, the mod ID, and the version are all required on each dependency. A
+// row that has some but not all is incomplete, so flag it and report the form
+// invalid; a fully blank row is fine (it's skipped). Returns true when every row
+// is complete.
 function validateDeps() {
   let valid = true;
   installDepsEl.querySelectorAll('.install-dep-row').forEach(row => {
     const url = row.querySelector('.dep-url').value.trim();
     const id = row.querySelector('.dep-id').value.trim();
+    const version = row.querySelector('.dep-version').value.trim();
     const err = row.querySelector('.dep-error');
-    if (id && !url) {
+    if (!url && !id && !version) {
+      setStatus(err, ''); // fully blank row: skipped, not an error
+    } else if (!url) {
       valid = false;
       setStatus(err, 'Add this dependency’s .version or .zip link.', 'error');
-    } else if (url && !id) {
+    } else if (!id) {
       valid = false;
       setStatus(err, 'Add this dependency’s mod ID.', 'error');
+    } else if (!version) {
+      valid = false;
+      setStatus(err, 'Add this dependency’s version.', 'error');
     } else {
       setStatus(err, '');
     }
@@ -96,6 +104,7 @@ function formatOutput(openUrl, badgeImg) {
 function updateInstallOutput() {
   const modUrl = installModInput.value.trim();
   const modId = installModIdInput.value.trim();
+  const modVersion = installModVersionInput.value.trim();
   const badgeImg = staticBase() + installBadgeFile;
 
   // Always refresh the badge preview image.
@@ -105,17 +114,17 @@ function updateInstallOutput() {
   img.alt = 'install badge preview';
   installBadgePreview.appendChild(img);
 
-  // The mod URL and mod ID are both required, and every dependency must be
-  // complete; otherwise block output so we never emit a link that silently
+  // The mod URL, mod ID, and version are all required, and every dependency must
+  // be complete; otherwise block output so we never emit a link that silently
   // drops a dependency.
   const depsValid = validateDeps();
-  if (!modUrl || !modId || !depsValid) {
+  if (!modUrl || !modId || !modVersion || !depsValid) {
     installText.value = '';
     copyInstallBtn.disabled = true;
     return;
   }
 
-  const modEntry = { url: Deeplink.toRawGithubURL(modUrl), id: modId };
+  const modEntry = { url: Deeplink.toRawGithubURL(modUrl), id: modId, version: modVersion };
   const openUrl = buildOpenUrl(modEntry, depEntries());
   installText.value = formatOutput(openUrl, badgeImg);
   copyInstallBtn.disabled = false;
@@ -130,12 +139,14 @@ function updateInstallOutput() {
   installBadgePreview.appendChild(link);
 }
 
-// Best-effort client-side resolution preview for a .version URL.
-function previewVersion(url, targetEl) {
+// Best-effort client-side resolution preview for a .version URL. When the file
+// resolves and `versionInput` is still empty, its version is filled in — a .zip
+// link can't be resolved this way, so that field stays for the user to type.
+function previewVersion(url, targetEl, versionInput) {
   if (!url) { targetEl.textContent = ''; targetEl.className = 'install-preview'; return; }
   if (!Deeplink.isVersionFile(url)) {
-    targetEl.textContent = 'Direct download: ' + Deeplink.filenameFromURL(url);
-    targetEl.className = 'install-preview neutral';
+    targetEl.textContent = Deeplink.filenameFromURL(url);
+    targetEl.className = 'install-preview ok';
     return;
   }
   targetEl.textContent = 'Resolving…';
@@ -145,6 +156,10 @@ function previewVersion(url, targetEl) {
     if (targetEl.dataset.url !== url) return;
     if (result && result.data) {
       const v = Deeplink.formatVersion(result.data.modVersion);
+      if (v && versionInput && !versionInput.value.trim()) {
+        versionInput.value = v;
+        updateInstallOutput();
+      }
       const label = result.data.modName + (v ? ' v' + v : '');
       if (!result.data.directDownloadURL) {
         // Resolved fine but has no directDownloadURL — the one-click install has
@@ -152,7 +167,7 @@ function previewVersion(url, targetEl) {
         targetEl.textContent = '⚠ ' + label + ' has no directDownloadURL — one-click install won’t work.';
         targetEl.className = 'install-preview warn';
       } else {
-        targetEl.textContent = '✓ ' + label;
+        targetEl.textContent = label;
         targetEl.className = 'install-preview ok';
       }
     } else {
@@ -176,12 +191,12 @@ function scheduleInstallUpdate() {
   clearTimeout(installDebounce);
   installDebounce = setTimeout(() => {
     installModPreview.dataset.url = installModInput.value.trim();
-    previewVersion(installModInput.value.trim(), installModPreview);
+    previewVersion(installModInput.value.trim(), installModPreview, installModVersionInput);
     installDepsEl.querySelectorAll('.install-dep-row').forEach(row => {
       const input = row.querySelector('.dep-url');
       const prev = row.querySelector('.install-preview');
       prev.dataset.url = input.value.trim();
-      previewVersion(input.value.trim(), prev);
+      previewVersion(input.value.trim(), prev, row.querySelector('.dep-version'));
     });
   }, 400);
 }
@@ -200,7 +215,7 @@ function mdField(input, labelText) {
   return wrap;
 }
 
-function addDepRow(url, id, focusInput) {
+function addDepRow(url, id, version, focusInput) {
   const row = document.createElement('div');
   row.className = 'install-card install-dep-row';
 
@@ -228,6 +243,14 @@ function addDepRow(url, id, focusInput) {
   idInput.autocomplete = 'off';
   if (id) idInput.value = id;
   idInput.addEventListener('input', updateInstallOutput);
+
+  const versionInput = document.createElement('input');
+  versionInput.type = 'text';
+  versionInput.className = 'dep-version';
+  versionInput.placeholder = 'e.g. 1.2.3';
+  versionInput.autocomplete = 'off';
+  if (version) versionInput.value = version;
+  versionInput.addEventListener('input', updateInstallOutput);
 
   const preview = document.createElement('p');
   preview.className = 'install-preview';
@@ -258,13 +281,18 @@ function addDepRow(url, id, focusInput) {
   const dropMsg = document.createElement('p');
   dropMsg.className = 'status-msg drop-status';
 
-  const depTargets = () => ({ urlInput: input, idInput: idInput, msg: dropMsg });
+  const depTargets = () => ({ urlInput: input, idInput: idInput, versionInput: versionInput, msg: dropMsg });
   wireBrowse(dropZone, dropInput, depTargets);
   // The whole dependency card is the drop target; the inner zone is just browse.
   wireDropTarget(row, depTargets);
 
+  // Mod ID and version sit side by side beneath the link field.
+  const idVersionRow = document.createElement('div');
+  idVersionRow.className = 'input-row';
+  idVersionRow.append(mdField(idInput, 'Mod ID'), mdField(versionInput, 'Version'));
+
   // Resolved mod name sits at the top, labeling this dependency's field group.
-  row.append(preview, top, depError, mdField(idInput, 'Mod ID'), dropZone, dropMsg);
+  row.append(preview, top, depError, idVersionRow, dropZone, dropMsg);
   installDepsEl.appendChild(row);
   if (focusInput !== false) input.focus();
   return row;
@@ -295,8 +323,9 @@ function loadFromLink() {
 
   installModInput.value = modEntry.url;
   installModIdInput.value = modEntry.id || '';
+  installModVersionInput.value = modEntry.version || '';
   installDepsEl.innerHTML = '';
-  deps.forEach(d => addDepRow(d.url, d.id || '', false));
+  deps.forEach(d => addDepRow(d.url, d.id || '', d.version || '', false));
 
   scheduleInstallUpdate();
   installImportMsg.textContent = `Loaded mod${deps.length ? ` + ${deps.length} ${deps.length === 1 ? 'dependency' : 'dependencies'}` : ''}.`;
@@ -309,7 +338,8 @@ installImportInput.addEventListener('keydown', (e) => {
 });
 installModInput.addEventListener('input', scheduleInstallUpdate);
 installModIdInput.addEventListener('input', updateInstallOutput);
-addDepBtn.addEventListener('click', () => addDepRow(''));
+installModVersionInput.addEventListener('input', updateInstallOutput);
+addDepBtn.addEventListener('click', () => addDepRow('', '', ''));
 
 // --- mod file drop / browse --------------------------------------------------
 // A dropped (or browsed) mod file is parsed with Hjson — neither .version nor
@@ -350,15 +380,20 @@ function processModFile(file, targets) {
         return;
       }
       targets.urlInput.value = result.url;
+      // A .version carries modVersion, so fill the (required) version field too.
+      if (result.version && targets.versionInput) targets.versionInput.value = result.version;
       setStatus(targets.msg, ''); // clear any prior error; success is silent
     } else if (result.kind === 'modinfo' && targets.idInput) {
       targets.idInput.value = result.id;
+      // mod_info.json carries the version too — fill it so the user needn't retype.
+      if (result.version && targets.versionInput) targets.versionInput.value = result.version;
       setStatus(targets.msg, ''); // clear any prior error; success is silent
       // If this mod_info declares dependencies and the user hasn't started a
-      // dependency list yet, seed a row per dependency with its mod id prefilled.
+      // dependency list yet, seed a row per dependency with its mod id (and
+      // version, when the file lists one) prefilled.
       const deps = Deeplink.extractDependencies(parsed);
       if (deps.length && installDepsEl.querySelectorAll('.install-dep-row').length === 0) {
-        deps.forEach(dep => addDepRow('', dep.id, false));
+        deps.forEach(dep => addDepRow('', dep.id, dep.version || '', false));
       }
     } else {
       setStatus(targets.msg, `That file didn't have what this field needs.`, 'error');
@@ -430,6 +465,7 @@ if (versionDropzone) {
   const modTargets = () => ({
     urlInput: installModInput,
     idInput: installModIdInput,
+    versionInput: installModVersionInput,
     msg: versionDropMsg
   });
   wireBrowse(versionDropzone, versionFileInput, modTargets);
@@ -448,10 +484,11 @@ if (versionDropzone) {
 // event before it reaches the section. getTargets runs once per drop, so each
 // drop here creates exactly one new row.
 const newDepTargets = () => {
-  const row = addDepRow('', '', false);
+  const row = addDepRow('', '', '', false);
   return {
     urlInput: row.querySelector('.dep-url'),
     idInput: row.querySelector('.dep-id'),
+    versionInput: row.querySelector('.dep-version'),
     msg: row.querySelector('.drop-status')
   };
 };

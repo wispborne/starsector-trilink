@@ -13,6 +13,7 @@ const {
   extractDependencies,
   readModFile,
   formatVersion,
+  versionString,
   toRawGithubURL
 } = require('../deeplink');
 
@@ -28,6 +29,15 @@ describe('entryToParam', () => {
   });
   it('omits a blank id', () => {
     assert.equal(entryToParam({ url: 'https://x/m.zip', id: '   ' }), '{"url":"https://x/m.zip"}');
+  });
+  it('includes version when present, after id', () => {
+    assert.equal(
+      entryToParam({ url: 'https://x/Mod.version', id: 'nexerelin', version: '0.11.2' }),
+      '{"url":"https://x/Mod.version","id":"nexerelin","version":"0.11.2"}'
+    );
+  });
+  it('omits a blank version', () => {
+    assert.equal(entryToParam({ url: 'https://x/m.zip', id: 'm', version: '  ' }), '{"url":"https://x/m.zip","id":"m"}');
   });
 });
 
@@ -86,17 +96,17 @@ describe('buildSchemeTarget', () => {
 });
 
 describe('parseEntry', () => {
-  it('parses a JSON entry with id', () => {
+  it('parses a JSON entry with id and version', () => {
     assert.deepEqual(
-      parseEntry('{"url":"https://x/Mod.version","id":"nexerelin"}'),
-      { url: 'https://x/Mod.version', id: 'nexerelin' }
+      parseEntry('{"url":"https://x/Mod.version","id":"nexerelin","version":"0.11.2"}'),
+      { url: 'https://x/Mod.version', id: 'nexerelin', version: '0.11.2' }
     );
   });
-  it('parses a JSON entry without id (id => null)', () => {
-    assert.deepEqual(parseEntry('{"url":"https://x/m.zip"}'), { url: 'https://x/m.zip', id: null });
+  it('parses a JSON entry without id/version (=> null)', () => {
+    assert.deepEqual(parseEntry('{"url":"https://x/m.zip"}'), { url: 'https://x/m.zip', id: null, version: null });
   });
   it('tolerates a bare URL string', () => {
-    assert.deepEqual(parseEntry('https://x/m.zip'), { url: 'https://x/m.zip', id: null });
+    assert.deepEqual(parseEntry('https://x/m.zip'), { url: 'https://x/m.zip', id: null, version: null });
   });
   it('returns null for empty / url-less input', () => {
     assert.equal(parseEntry(''), null);
@@ -104,7 +114,7 @@ describe('parseEntry', () => {
     assert.equal(parseEntry('{"id":"x"}'), null);
   });
   it('round-trips with entryToParam', () => {
-    const entry = { url: 'https://x/My Mod.version?ref=main', id: 'a"b' };
+    const entry = { url: 'https://x/My Mod.version?ref=main', id: 'a"b', version: '1.2.3' };
     assert.deepEqual(parseEntry(entryToParam(entry)), entry);
   });
 });
@@ -214,7 +224,8 @@ describe('extractRemoteLink', () => {
     assert.deepEqual(extractRemoteLink(parsed), {
       url: 'https://raw.githubusercontent.com/wispborne/stories/master/wisp_perseanchronicles.version',
       source: 'masterVersionFile',
-      modName: 'Persean Chronicles'
+      modName: 'Persean Chronicles',
+      version: '3.0.8'
     });
   });
 
@@ -242,14 +253,20 @@ describe('extractRemoteLink', () => {
 });
 
 describe('extractModId', () => {
-  it('pulls id and name from a mod_info.json object', () => {
+  it('pulls id, name, and version from a mod_info.json object', () => {
     assert.deepEqual(
       extractModId({ id: 'MagicLib', name: 'MagicLib', version: { major: 1, minor: 5, patch: 8 } }),
-      { id: 'MagicLib', name: 'MagicLib' }
+      { id: 'MagicLib', name: 'MagicLib', version: '1.5.8' }
     );
   });
-  it('exposes a null name when absent', () => {
-    assert.deepEqual(extractModId({ id: 'JYD' }), { id: 'JYD', name: null });
+  it('reads a string version verbatim', () => {
+    assert.deepEqual(
+      extractModId({ id: 'foo', version: '1.2.3' }),
+      { id: 'foo', name: null, version: '1.2.3' }
+    );
+  });
+  it('exposes a null name/version when absent', () => {
+    assert.deepEqual(extractModId({ id: 'JYD' }), { id: 'JYD', name: null, version: null });
   });
   it('returns null when there is no usable id', () => {
     assert.equal(extractModId({ name: 'No Id' }), null);
@@ -260,29 +277,29 @@ describe('extractModId', () => {
 });
 
 describe('extractDependencies', () => {
-  it('pulls id (and name) from each dependency in a mod_info.json', () => {
+  it('pulls id (and name/version) from each dependency in a mod_info.json', () => {
     const parsed = {
       id: 'wisp_perseanchronicles',
       dependencies: [
-        { id: 'lw_lazylib', name: 'LazyLib' },
-        { id: 'MagicLib', name: 'MagicLib' }
+        { id: 'lw_lazylib', name: 'LazyLib', version: '2.8' },
+        { id: 'MagicLib', name: 'MagicLib', version: { major: 1, minor: 5, patch: 8 } }
       ]
     };
     assert.deepEqual(extractDependencies(parsed), [
-      { id: 'lw_lazylib', name: 'LazyLib' },
-      { id: 'MagicLib', name: 'MagicLib' }
+      { id: 'lw_lazylib', name: 'LazyLib', version: '2.8' },
+      { id: 'MagicLib', name: 'MagicLib', version: '1.5.8' }
     ]);
   });
 
-  it('exposes a null name when a dependency omits one', () => {
+  it('exposes a null name/version when a dependency omits them', () => {
     assert.deepEqual(extractDependencies({ dependencies: [{ id: 'shaderLib' }] }), [
-      { id: 'shaderLib', name: null }
+      { id: 'shaderLib', name: null, version: null }
     ]);
   });
 
   it('skips dependency entries with no usable id', () => {
     const parsed = { dependencies: [{ name: 'No Id' }, { id: '  ' }, { id: 'ok', name: 'OK' }] };
-    assert.deepEqual(extractDependencies(parsed), [{ id: 'ok', name: 'OK' }]);
+    assert.deepEqual(extractDependencies(parsed), [{ id: 'ok', name: 'OK', version: null }]);
   });
 
   it('returns [] when there is no dependencies array', () => {
@@ -303,13 +320,14 @@ describe('readModFile', () => {
       kind: 'version',
       url: 'https://x/timid_xiv.version',
       source: 'masterVersionFile',
-      modName: 'Iron Shell'
+      modName: 'Iron Shell',
+      version: '1.18.5b'
     });
   });
 
-  it('classifies a mod_info.json object and returns its mod id', () => {
+  it('classifies a mod_info.json object and returns its mod id and version', () => {
     const result = readModFile({ id: 'starlords', name: 'Star Lords', version: { major: 0, minor: 3, patch: 72 } });
-    assert.deepEqual(result, { kind: 'modinfo', id: 'starlords', modName: 'Star Lords' });
+    assert.deepEqual(result, { kind: 'modinfo', id: 'starlords', modName: 'Star Lords', version: '0.3.72' });
   });
 
   it('returns null for an object that is neither', () => {
@@ -318,18 +336,31 @@ describe('readModFile', () => {
   });
 });
 
-describe('formatVersion (client mirror)', () => {
-  it('strips trailing zero patch', () => {
-    assert.equal(formatVersion({ major: '2', minor: '1', patch: '0' }), '2.1');
-  });
-  it('strips trailing zero minor and patch', () => {
-    assert.equal(formatVersion({ major: '4', minor: '0', patch: '0' }), '4');
+describe('formatVersion (via canonical Version parser)', () => {
+  it('joins all parts, keeping trailing zeros (matches TriOS)', () => {
+    assert.equal(formatVersion({ major: '2', minor: '1', patch: '0' }), '2.1.0');
+    assert.equal(formatVersion({ major: '4', minor: '0', patch: '0' }), '4.0.0');
   });
   it('keeps a non-zero patch', () => {
     assert.equal(formatVersion({ major: '1', minor: '5', patch: '6' }), '1.5.6');
   });
-  it('appends a non-numeric patch without a dot', () => {
-    assert.equal(formatVersion({ major: '2', minor: '0', patch: 'b' }), '2.0b');
+  it('keeps a non-numeric patch as its own dotted part', () => {
+    assert.equal(formatVersion({ major: '2', minor: '0', patch: 'b' }), '2.0.b');
+  });
+});
+
+describe('versionString', () => {
+  it('formats a { major, minor, patch } object', () => {
+    assert.equal(versionString({ major: 1, minor: 5, patch: 8 }), '1.5.8');
+    assert.equal(versionString({ major: 2, minor: 0, patch: 0 }), '2.0.0');
+  });
+  it('returns a plain string trimmed', () => {
+    assert.equal(versionString('  1.2.3  '), '1.2.3');
+  });
+  it('returns null for empty / missing input', () => {
+    assert.equal(versionString(null), null);
+    assert.equal(versionString(undefined), null);
+    assert.equal(versionString('   '), null);
   });
 });
 

@@ -6,35 +6,42 @@
  * resolveVersion() is browser-only and depends on the vendored Hjson global.
  */
 (function (root, factory) {
-  if (typeof module === 'object' && module.exports) module.exports = factory();
-  else root.Deeplink = factory();
-})(typeof self !== 'undefined' ? self : this, function () {
+  if (typeof module === 'object' && module.exports) module.exports = factory(require('./version'));
+  else root.Deeplink = factory(root.Version);
+})(typeof self !== 'undefined' ? self : this, function (Version) {
   'use strict';
 
   var SCHEME = 'starsector-mod://install';
 
-  // Each mod/dep is an entry { url, id? }. The param VALUE is a JSON object,
-  // URL-encoded by URLSearchParams — e.g. mod={"url":"https://…","id":"nexerelin"}.
-  // `id` is optional (the manager uses it to skip already-installed mods); when
-  // absent the key is omitted entirely.
+  // Each mod/dep is an entry { url, id?, version? }. The param VALUE is a JSON
+  // object, URL-encoded by URLSearchParams — e.g.
+  // mod={"url":"https://…","id":"nexerelin","version":"0.11.2"}. `id` and
+  // `version` together let a manager skip a mod that's already installed; either
+  // is omitted entirely when absent.
   function entryToParam(entry) {
     var obj = { url: String(entry.url).trim() };
     if (entry.id != null && String(entry.id).trim()) obj.id = String(entry.id).trim();
+    if (entry.version != null && String(entry.version).trim()) obj.version = String(entry.version).trim();
     return JSON.stringify(obj);
   }
 
-  // Parse a decoded param value back into an entry { url, id }. Returns null if it
-  // has no usable url. Tolerates a bare URL string (treated as { url, id: null }).
+  // Parse a decoded param value back into an entry { url, id, version }. Returns
+  // null if it has no usable url. Tolerates a bare URL string (treated as
+  // { url, id: null, version: null }).
   function parseEntry(value) {
     if (!value || !String(value).trim()) return null;
     try {
       var obj = JSON.parse(value);
       if (obj && obj.url && String(obj.url).trim()) {
-        return { url: String(obj.url).trim(), id: obj.id != null ? String(obj.id) : null };
+        return {
+          url: String(obj.url).trim(),
+          id: obj.id != null ? String(obj.id) : null,
+          version: obj.version != null ? String(obj.version) : null
+        };
       }
       return null;
     } catch (e) {
-      return { url: String(value).trim(), id: null }; // forgiving: bare URL
+      return { url: String(value).trim(), id: null, version: null }; // forgiving: bare URL
     }
   }
 
@@ -64,7 +71,7 @@
     return /\.version$/i.test(clean);
   }
 
-  // Extract a URL-decoded filename from a URL. Mirrors version.js filenameFromURL.
+  // Extract a URL-decoded filename from a URL.
   function filenameFromURL(url) {
     try {
       var clean = String(url).split('#')[0].split('?')[0];
@@ -75,13 +82,29 @@
     }
   }
 
-  // Format a modVersion object. Mirrors version.js formatVersion (no "v" prefix).
+  // Format a modVersion object ({ major, minor, patch }) into a string, routed
+  // through the canonical Version parser so the result matches how TriOS renders
+  // it. No "v" prefix; no "v" suffix-stripping — e.g. { 1, 2, 0 } -> "1.2.0".
   function formatVersion(v) {
     if (!v) return '';
-    var major = String(v.major), minor = String(v.minor), patch = String(v.patch);
-    if (patch === '0') return minor === '0' ? major : major + '.' + minor;
-    if (/^[0-9]+$/.test(patch)) return major + '.' + minor + '.' + patch;
-    return major + '.' + minor + patch; // non-numeric patch: append without a dot
+    return new Version({ major: v.major, minor: v.minor, patch: v.patch }).toStringFromParts();
+  }
+
+  // Render a version as a display/storage string, via the canonical Version
+  // parser. Accepts either a { major, minor, patch } object (as in a .version
+  // file's modVersion or a mod_info.json's version) or a plain string
+  // (mod_info.json sometimes stores version as "1.2.3"). Returns null when
+  // there's nothing usable. Pure.
+  function versionString(v) {
+    if (v == null) return null;
+    if (typeof v === 'string') {
+      var s = v.trim();
+      if (!s) return null;
+      // Parse to validate/structure, but keep the author's original spelling.
+      return Version.parse(s).toString();
+    }
+    if (typeof v === 'object') { return formatVersion(v) || null; }
+    return null;
   }
 
   // Pull the directDownloadURL out of a parsed .version object, matching the key
@@ -134,7 +157,8 @@
     return {
       url: url,
       source: master ? 'masterVersionFile' : 'directDownloadURL',
-      modName: parsed.modName != null ? String(parsed.modName) : null
+      modName: parsed.modName != null ? String(parsed.modName) : null,
+      version: versionString(parsed.modVersion)
     };
   }
 
@@ -146,7 +170,11 @@
     if (!parsed || typeof parsed !== 'object') return null;
     var id = parsed.id != null && String(parsed.id).trim();
     if (!id) return null;
-    return { id: id, name: parsed.name != null ? String(parsed.name) : null };
+    return {
+      id: id,
+      name: parsed.name != null ? String(parsed.name) : null,
+      version: versionString(parsed.version)
+    };
   }
 
   // Extract dependency entries from a parsed mod_info.json. A mod_info.json may
@@ -159,7 +187,11 @@
       if (!d || typeof d !== 'object') return null;
       var id = d.id != null && String(d.id).trim();
       if (!id) return null;
-      return { id: id, name: d.name != null ? String(d.name) : null };
+      return {
+        id: id,
+        name: d.name != null ? String(d.name) : null,
+        version: versionString(d.version)
+      };
     }).filter(Boolean);
   }
 
@@ -168,13 +200,14 @@
   // .version carries masterVersionFile/directDownloadURL but no top-level id, and
   // a mod_info.json carries an id but neither link — so no filename hint is
   // needed. Returns:
-  //   { kind: 'version', url, source, modName } | { kind: 'modinfo', id, modName }
+  //   { kind: 'version', url, source, modName, version }
+  //   | { kind: 'modinfo', id, modName, version }
   // or null when the object is neither.
   function readModFile(parsed) {
     var link = extractRemoteLink(parsed);
-    if (link) return { kind: 'version', url: link.url, source: link.source, modName: link.modName };
+    if (link) return { kind: 'version', url: link.url, source: link.source, modName: link.modName, version: link.version };
     var info = extractModId(parsed);
-    if (info) return { kind: 'modinfo', id: info.id, modName: info.name };
+    if (info) return { kind: 'modinfo', id: info.id, modName: info.name, version: info.version };
     return null;
   }
 
@@ -219,6 +252,7 @@
     isVersionFile: isVersionFile,
     filenameFromURL: filenameFromURL,
     formatVersion: formatVersion,
+    versionString: versionString,
     normalizeVersionData: normalizeVersionData,
     getDirectDownloadURL: getDirectDownloadURL,
     extractRemoteLink: extractRemoteLink,
