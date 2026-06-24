@@ -26,6 +26,7 @@ skip it. See [cors-relay/README.md](cors-relay/README.md).
 | `scripts/gen-install-badges.js` | Dev tool that regenerates the badge SVGs. Self-contained — no dependencies. |
 | `tests/deeplink.test.js` | Unit tests for `deeplink.js`. |
 | `tests/version.test.js` | Unit tests for `version.js`. |
+| `config.js` | Site settings you edit by hand (e.g. the optional CORS relay URL). Loads before everything else. No build step. |
 | `cors-relay/` | Optional Cloudflare Worker that lets the browser read `.version` files from hosts that block cross-origin reads. Off by default. |
 
 ## How it works

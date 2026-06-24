@@ -28,13 +28,12 @@ handles GET, and caps the size — it is not a general-purpose proxy.
 
 ## Turn it on
 
-Point TriLink at the deployed Worker in one of two ways:
+Open `config.js` in the project root and paste the URL:
 
-- Edit `CORS_PROXY` in `deeplink.js` and paste the URL, **or**
-- Add this to `index.html` and `open.html`, before the other `<script>` tags:
+```js
+self.TRILINK_CORS_PROXY = 'https://trilink-cors.<your-name>.workers.dev';
+```
 
-  ```html
-  <script>self.TRILINK_CORS_PROXY = 'https://trilink-cors.<your-name>.workers.dev';</script>
-  ```
+That's the only place you edit. Leave it blank to keep the relay off.
 
 The free Cloudflare plan (100,000 requests/day) is far more than this needs.

@@ -15,11 +15,10 @@
 
   // Optional CORS relay (see cors-relay/). Some hosts (Bitbucket, Dropbox, …)
   // don't send cross-origin headers, so the browser can't read their .version
-  // files directly. When set, this is a small self-hosted Cloudflare Worker that
-  // re-fetches the file and adds the missing header. Leave it blank to stay fully
-  // no-backend — links still work either way; only the in-browser preview and the
-  // no-TriOS download fallback lose the ability to resolve those hosts. Set it
-  // here, or define self.TRILINK_CORS_PROXY before this script loads.
+  // files directly. When set, it's a small relay that re-fetches the file and
+  // adds the missing header. Configured in config.js via self.TRILINK_CORS_PROXY,
+  // which loads before this script; blank by default, so the site stays fully
+  // no-backend unless you turn it on.
   var CORS_PROXY = (typeof self !== 'undefined' && self.TRILINK_CORS_PROXY) || '';
 
   // Build the relay URL for a target .version URL. The Worker reads ?url=.

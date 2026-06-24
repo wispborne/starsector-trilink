@@ -25,10 +25,11 @@ the label, icon, or palette.
 ## Architecture
 
 Two HTML entry points, sharing a chain of plain `<script>`-loaded modules. **Script load
-order matters** and must stay `hjson → version.js → deeplink.js → (install.js | open.js)`,
-because each later module reads the previous one off the global (`window.Version`,
-`window.Deeplink`, `Hjson`). See the `<script>` tags in [index.html](index.html) and
-[open.html](open.html).
+order matters** and must stay `config.js → hjson → version.js → deeplink.js → (install.js |
+open.js)`, because each later module reads the previous one off the global (`window.Version`,
+`window.Deeplink`, `Hjson`); `config.js` goes first so its settings (e.g.
+`self.TRILINK_CORS_PROXY`) are set before any module reads them. See the `<script>` tags in
+[index.html](index.html) and [open.html](open.html).
 
 - **[index.html](index.html) + [install.js](install.js)** — the generator UI. Author pastes
   a `.version`/`.zip`/`mod_info.json` URL (or drops a file), adds optional dependencies,
@@ -71,8 +72,8 @@ directly and the browser loads them as globals.
 - **Optional CORS relay**: some hosts (Bitbucket, Dropbox, …) block cross-origin reads, so the
   browser can't read their `.version` files. `resolveVersion` reads directly first and falls
   back to the relay in [cors-relay/](cors-relay/) (a self-hosted Cloudflare Worker) only when
-  that fails. The relay is off unless `CORS_PROXY`/`self.TRILINK_CORS_PROXY` is set, so the
-  site stays fully static by default. The relay only ever changes the browser-side preview and
+  that fails. The relay URL lives in [config.js](config.js) (`self.TRILINK_CORS_PROXY`) and is
+  blank by default, so the site stays fully static unless you turn it on. The relay only ever changes the browser-side preview and
   the no-TriOS download fallback — it never affects the one-click install, which TriOS (a
   desktop app, not a browser) does itself with no CORS limits.
 - The `starsector-mod://` scheme is a proposed **community standard**, not TriOS-specific.
