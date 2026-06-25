@@ -7,10 +7,13 @@ installed clicks the badge and the mod (and any dependencies) installs in one st
 There is nothing to run server-side: it's a folder of static files. Open it locally or publish
 it to GitHub Pages unchanged.
 
-There's one optional extra: a small [CORS relay](cors-relay/) you can deploy so the page can
-read `.version` files from hosts that block cross-origin reads (Bitbucket, Dropbox, …). It's
-not required — the install button works without it — and the site stays fully static if you
-skip it. See [cors-relay/README.md](cors-relay/README.md).
+There's one optional extra: a small [CORS relay](cors-relay/) — a tiny Cloudflare Worker. A few
+hosts (Bitbucket, Dropbox, …) block cross-origin reads, so on its own the browser can't read
+their `.version` files for the live preview or the no-TriOS download fallback. With the relay
+deployed (TriLink's own deployment runs it), that's no longer a limitation — those hosts read
+fine too. It stays optional: the install button itself never needs it — TriOS is a desktop app,
+not a browser, so it has no cross-origin limits — and the site stays fully static if you skip
+the relay. See [cors-relay/README.md](cors-relay/README.md).
 
 ## What's here
 
@@ -26,7 +29,9 @@ skip it. See [cors-relay/README.md](cors-relay/README.md).
 | `scripts/gen-install-badges.js` | Dev tool that regenerates the badge SVGs. Self-contained — no dependencies. |
 | `tests/deeplink.test.js` | Unit tests for `deeplink.js`. |
 | `tests/version.test.js` | Unit tests for `version.js`. |
-| `config.js` | Site settings you edit by hand (e.g. the optional CORS relay URL). Loads before everything else. No build step. |
+| `libraries.js` | Hand-editable list of the common libraries shown as dependency "Quick add" buttons. Edit to add/remove/update one. |
+| `config.example.js` | Template for site settings. Copy it to `config.js` (gitignored) and edit that. |
+| `config.js` | Your local site settings (e.g. the optional CORS relay URL). Gitignored, so it's never committed. Loads before everything else. No build step. |
 | `cors-relay/` | Optional Cloudflare Worker that lets the browser read `.version` files from hosts that block cross-origin reads. Off by default. |
 
 ## How it works
@@ -146,9 +151,18 @@ build/parse/normalize steps and are covered by [`tests/deeplink.test.js`](tests/
 
 ## Run it locally
 
-It's static, so just open `index.html` in a browser. (The `.version` live-preview uses
-`fetch()`, which works for hosts that allow cross-origin reads — e.g. `raw.githubusercontent.com`;
-it degrades gracefully otherwise and never blocks link generation.)
+First, create your settings file by copying the example (it's gitignored, so your real
+settings — like a CORS relay URL — never get committed):
+
+```bash
+cp config.example.js config.js
+```
+
+The site still loads without it, just with the relay off. Then open `index.html` in a
+browser. (The `.version` live-preview uses
+`fetch()`. Hosts that allow cross-origin reads — e.g. `raw.githubusercontent.com` — are read
+directly; hosts that block them (Bitbucket, Dropbox, …) are read through the optional CORS relay
+when it's configured. Either way it degrades gracefully and never blocks link generation.)
 
 If you prefer a local server, any static server works, for example:
 

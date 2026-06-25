@@ -27,10 +27,11 @@
   // read. When we couldn't resolve it to a real archive URL, a manual link still
   // points at the .version itself. Drop a short note right under that link so a
   // visitor without TriOS knows what it is, plus an info icon whose tooltip
-  // explains *why* TriLink couldn't get the direct link: corsBlocked true means
-  // the host's cross-origin policy blocked the read; false means the file simply
-  // lists no directDownloadURL. No-op if a note is already there.
-  function noteVersionFile(linkEl, sourceUrl, corsBlocked) {
+  // explains *why* TriLink couldn't get the direct link: couldNotRead true means
+  // the .version couldn't be read in the browser this time (e.g. the host wasn't
+  // reachable); false means the file was read but lists no directDownloadURL.
+  // No-op if a note is already there.
+  function noteVersionFile(linkEl, sourceUrl, couldNotRead) {
     var next = linkEl.nextElementSibling;
     if (next && next.classList.contains('fallback-note')) return;
 
@@ -39,9 +40,9 @@
     note.innerHTML = '<code>.version</code> file — open or save it to find the download link inside.';
 
     var host = hostnameOf(sourceUrl);
-    var why = corsBlocked
-      ? ('TriLink can’t read the download link from ' + (host || 'this host') +
-         ' directly. Its cross-origin (CORS) policy blocks reading the file in a browser. The link is still inside the file.')
+    var why = couldNotRead
+      ? ('TriLink couldn’t read the download link from ' + (host || 'this host') +
+         ' in your browser. The link is still inside the .version file — open or save it to get it.')
       : 'This .version file doesn’t list a directDownloadURL, so TriLink has no direct download to link to.';
 
     var tip = document.createElement('span');
@@ -150,8 +151,8 @@
             return;
           }
         }
-        // Couldn't resolve a direct download (host blocked the read, or the file
-        // has no directDownloadURL). Offer the .version link itself, explained —
+        // Couldn't resolve a direct download (the file couldn't be read, or it has
+        // no directDownloadURL). Offer the .version link itself, explained —
         // launch is unaffected either way.
         setDownload(mod.url);
         noteVersionFile(els.downloadLink, mod.url, !(result && result.data));
@@ -200,7 +201,7 @@
             // Link straight to the mod download, not the .version file.
             if (d.directDownloadURL) { a.href = d.directDownloadURL; return; }
           } else {
-            // CORS/parse failure: fall back to the raw URL.
+            // Couldn't read or parse it: fall back to the raw URL.
             textEl.textContent = Deeplink.filenameFromURL(depUrl);
           }
           // Still pointing at the .version file — explain it under this link.

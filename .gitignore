@@ -15,5 +15,9 @@ Thumbs.db
 # Claude Code local session state
 .claude/
 
+# Local site settings — copy config.example.js to config.js and edit that.
+# Kept out of git so a real CORS relay URL isn't committed.
+config.js
+
 # Build artifacts
 starsector-install-link.zip

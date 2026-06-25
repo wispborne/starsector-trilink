@@ -87,9 +87,13 @@
             <ol class="how-to" style="counter-reset: step 2">
               <li><strong>Add dependencies</strong> <span class="opt">(optional)</span>. Click <em>Add dependency</em>
                 and paste each required mod's <code>.version</code> or <code>.zip</code> link and its mod id.
-                Optionally tick <em>Require this version or newer</em> to set a minimum version.
               </li>
             </ol>
+
+            <div class="dep-quick-add">
+              <span class="dep-quick-label">Quick add a common library:</span>
+              <div id="dep-lib-chips" class="dep-lib-chips"></div>
+            </div>
 
             <div id="install-deps" class="install-deps"></div>
             <button id="add-dep-btn" class="btn-add-dep"><span class="material-icons">add</span> Add dependency</button>
@@ -250,19 +254,23 @@
           <p>If you used a <code>.zip</code> link, players always get that exact file. It won't change until you swap in
             a new link yourself, so if the mod author breaks that download link, your download link will break.</p>
           <br />
-          <p><strong>Note</strong>: TriOS won't redownload mods the player already has <strong>unless</strong> you enter a
+          <p><strong>Note</strong>: TriOS won't redownload mods the player already has <strong>unless</strong> you enter
+            a
             version, check the "Require this version or newer" checkbox, and the player has an old version of the mod.
           </p>
           <br />
-          <p>So, if you link to LazyLib 3.0 and don't check that box and they have LazyLib 2.7, it won't download LazyLib. But if you fill in the version as 3.0 and check the box, it will update their version of LazyLib.</p>
+          <p>So, if you link to LazyLib 3.0 and don't check that box and they have LazyLib 2.7, it won't download
+            LazyLib. But if you fill in the version as 3.0 and check the box, it will update their version of LazyLib.
+          </p>
         </div>
       </details>
 
       <details class="faq-item">
         <summary>Why doesn't the preview show my mod's name?</summary>
         <div class="faq-answer">
-          <p>The preview tries to read your <code>.version</code> file directly in your browser, but many hosts block
-            cross-origin reads for security. Assuming your link is right, it'll work fine, but it's always good to test!
+          <p>The preview reads your <code>.version</code> file in your browser to show the name. Once in a while a host
+            can't be reached and the name doesn't show. That doesn't mean your link is broken — it still works. It's
+            always good to test it, though!
           </p>
         </div>
       </details>
@@ -345,6 +353,7 @@ SOFTWARE.</pre>
   <script src="vendor/hjson.min.js"></script>
   <script src="version.js"></script>
   <script src="deeplink.js"></script>
+  <script src="libraries.js"></script>
   <script src="install.js"></script>
 </body>
 

@@ -693,16 +693,6 @@ textarea:focus {
 .install-preview.neutral { color: var(--on-surface-dim); }
 .install-preview.warn { color: #ffca28; }
 
-/* Title + subtitle layout used when a mod/dep is added but its name can't be
-   resolved. The title keeps the .ok accent; the subtitle is dimmed and smaller. */
-.install-preview .preview-title { display: block; }
-
-.install-preview .preview-sub {
-  display: block;
-  color: var(--on-surface-dim);
-  font-size: 11px;
-}
-
 .install-deps {
   display: flex;
   flex-direction: column;
@@ -881,6 +871,54 @@ textarea:focus {
 
 .btn-add-dep:hover { border-color: var(--accent); color: var(--accent); }
 .btn-add-dep .material-icons { font-size: 18px; }
+
+/* Quick-add chips for the common libraries most mods depend on. Each fills a new
+   dependency row with that library's link and mod id; an "added" chip marks one
+   already in the list. */
+.dep-quick-add {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-bottom: 12px;
+}
+
+.dep-quick-label {
+  color: var(--on-surface-dim);
+  font-size: 13px;
+}
+
+.dep-lib-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.dep-lib-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px 5px 8px;
+  background: var(--surface-variant);
+  border: 1px solid var(--surface-high);
+  border-radius: 999px;
+  color: var(--on-surface);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+
+.dep-lib-chip:hover { border-color: var(--accent); color: var(--accent); }
+.dep-lib-chip .material-icons { font-size: 16px; }
+
+/* Already in the dependency list: show a check and a quieter, settled look. The
+   chip still works — clicking scrolls to the existing row rather than adding it. */
+.dep-lib-chip.added {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+}
 
 .install-formats { flex-wrap: wrap; gap: 16px; }
 

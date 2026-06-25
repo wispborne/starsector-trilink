@@ -16,6 +16,7 @@ const installDepsEl = document.getElementById('install-deps');
 const addDepBtn = document.getElementById('add-dep-btn');
 const depAddDropzone = document.getElementById('dep-add-dropzone');
 const depAddFileInput = document.getElementById('dep-add-file-input');
+const depLibChips = document.getElementById('dep-lib-chips');
 const installSwatches = document.getElementById('install-swatches');
 const installLabelColors = document.getElementById('install-label-colors');
 const installStyles = document.getElementById('install-styles');
@@ -190,30 +191,25 @@ function previewVersion(url, targetEl, versionInput) {
       if (!result.data.directDownloadURL) {
         // Resolved fine but has no directDownloadURL — the one-click install has
         // nothing to download, so warn instead of showing a green check.
-        targetEl.textContent = '⚠ ' + label + ' has no directDownloadURL — one-click install won’t work.';
+        targetEl.textContent = '⚠ ' + label + ' has no directDownloadURL.';
         targetEl.className = 'install-preview warn';
       } else {
         targetEl.textContent = label;
         targetEl.className = 'install-preview ok';
       }
     } else {
-      // Couldn't fetch the .version (cross-origin block) — the link still works,
-      // so present it as a success; we just can't show the resolved mod name.
+      // Couldn't read the .version this time (e.g. the host was briefly
+      // unreachable). The link still works, so just confirm it was added — there's
+      // no need to explain the missing name.
       targetEl.className = 'install-preview ok';
-      targetEl.textContent = '';
-      const title = document.createElement('span');
-      title.className = 'preview-title';
-      title.textContent = '✓ ' + (targetEl === installModPreview ? 'Mod added' : 'Dependency added');
-      const sub = document.createElement('span');
-      sub.className = 'preview-sub';
-      sub.textContent = '(unable to show name due to XSS)';
-      targetEl.append(title, sub);
+      targetEl.textContent = '✓ ' + (targetEl === installModPreview ? 'Mod added' : 'Dependency added');
     }
   });
 }
 
 function scheduleInstallUpdate() {
   updateInstallOutput();
+  refreshLibChips();
   clearTimeout(installDebounce);
   installDebounce = setTimeout(() => {
     installModPreview.dataset.url = installModInput.value.trim();
@@ -394,6 +390,74 @@ installModVersionInput.addEventListener('input', updateInstallOutput);
 trackVersionEdits(installModVersionInput);
 addDepBtn.addEventListener('click', () => addDepRow('', '', ''));
 
+// --- quick-add for common libraries -----------------------------------------
+// The "Quick add" chips come from the hand-editable catalog in libraries.js
+// (loaded before this script), so the list can be updated without touching app
+// code. Each entry is { name, id, url }; the array is empty if libraries.js
+// isn't loaded, in which case the quick-add row hides itself below.
+const KNOWN_LIBRARIES = (typeof self !== 'undefined' && self.TRILINK_LIBRARIES) || [];
+
+// Look up a known library by mod id (matched case-insensitively), or null. Lets
+// other code fill in a library's link when it only has the id to go on — e.g. a
+// dependency seeded from a mod_info.json.
+function knownLibraryById(id) {
+  const want = String(id || '').trim().toLowerCase();
+  if (!want) return null;
+  return KNOWN_LIBRARIES.find(lib => lib.id.toLowerCase() === want) || null;
+}
+
+// Find an existing dependency row by mod id (matched case-insensitively, the same
+// way TriOS treats ids), or null if none. Used to avoid adding a library twice.
+function findDepRowById(id) {
+  const want = String(id).trim().toLowerCase();
+  if (!want) return null;
+  return Array.from(installDepsEl.querySelectorAll('.install-dep-row')).find(
+    row => row.querySelector('.dep-id').value.trim().toLowerCase() === want
+  ) || null;
+}
+
+// Mark the chips whose library is already in the dependency list, so a quick-add
+// reads as "added" once its row exists (and clears again if the row is removed).
+function refreshLibChips() {
+  if (!depLibChips) return;
+  depLibChips.querySelectorAll('.dep-lib-chip').forEach(chip => {
+    const added = !!findDepRowById(chip.dataset.libId);
+    chip.classList.toggle('added', added);
+    // Swap the leading icon between "add" and a check to match the state.
+    chip.querySelector('.material-icons').textContent = added ? 'check' : 'add';
+  });
+}
+
+// Add a known library as a dependency, or — if it's already listed — just bring
+// the existing row into view instead of duplicating it.
+function addLibrary(lib) {
+  const existing = findDepRowById(lib.id);
+  if (existing) {
+    existing.scrollIntoView({ block: 'nearest' });
+    existing.querySelector('.dep-url').focus();
+    return;
+  }
+  addDepRow(lib.url, lib.id, '', true);
+  scheduleInstallUpdate();
+}
+
+if (depLibChips && KNOWN_LIBRARIES.length) {
+  KNOWN_LIBRARIES.forEach(lib => {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'dep-lib-chip';
+    chip.dataset.libId = lib.id;
+    chip.innerHTML = '<span class="material-icons">add</span>' + lib.name;
+    chip.addEventListener('click', () => addLibrary(lib));
+    depLibChips.appendChild(chip);
+  });
+} else if (depLibChips) {
+  // No catalog (libraries.js missing or empty): hide the whole quick-add row so
+  // there's no dangling "Quick add" label with nothing under it.
+  const wrap = depLibChips.closest('.dep-quick-add');
+  if (wrap) wrap.hidden = true;
+}
+
 // --- mod file drop / browse --------------------------------------------------
 // A dropped (or browsed) mod file is parsed with Hjson — neither .version nor
 // mod_info.json is strict JSON (they carry comments, trailing commas, single
@@ -464,7 +528,7 @@ function processModFile(file, targets) {
           // Couldn't reach the remote (network/CORS). Can't verify, so don't
           // block — the link may still resolve in TriOS — but say so.
           accept();
-          setStatus(targets.msg, `Added, but couldn't verify a download link — the remote .version wasn't reachable from your browser. It'll work if the remote has one.`);
+          setStatus(targets.msg, `Added, but couldn't verify a download link. The remote .version wasn't reachable from your browser. It'll work if the remote has one.`);
         }
       });
       return;
@@ -475,10 +539,15 @@ function processModFile(file, targets) {
       setStatus(targets.msg, ''); // clear any prior error; success is silent
       // If this mod_info declares dependencies and the user hasn't started a
       // dependency list yet, seed a row per dependency with its mod id (and
-      // version, when the file lists one) prefilled.
+      // version, when the file lists one) prefilled. When the dependency is one of
+      // the known libraries, fill its download link too, so a common library
+      // arrives ready to use instead of as a bare id.
       const deps = Deeplink.extractDependencies(parsed);
       if (deps.length && installDepsEl.querySelectorAll('.install-dep-row').length === 0) {
-        deps.forEach(dep => addDepRow('', dep.id, dep.version || '', false));
+        deps.forEach(dep => {
+          const lib = knownLibraryById(dep.id);
+          addDepRow(lib ? lib.url : '', dep.id, dep.version || '', false);
+        });
       }
     } else {
       setStatus(targets.msg, `That file didn't have what this field needs.`, 'error');
