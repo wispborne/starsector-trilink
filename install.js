@@ -752,7 +752,7 @@ if (licenseDialog && openLicensesBtn) {
 const buildVersionEl = document.getElementById('build-version');
 if (buildVersionEl && self.BUILD_INFO) {
   const b = self.BUILD_INFO;
-  const commitURL = 'https://github.com/wispborne/starsector-install-link/commit/' + b.hash;
+  const commitURL = 'https://github.com/wispborne/starsector-trilink/commit/' + b.hash;
   buildVersionEl.innerHTML =
     'v' + b.version +
     ' · <a href="' + commitURL + '" target="_blank" rel="noopener">' + b.hash + '</a>' +

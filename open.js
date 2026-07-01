@@ -231,7 +231,7 @@
   const el = document.getElementById('build-version');
   if (!el || !self.BUILD_INFO) return;
   const b = self.BUILD_INFO;
-  const commitURL = 'https://github.com/wispborne/starsector-install-link/commit/' + b.hash;
+  const commitURL = 'https://github.com/wispborne/starsector-trilink/commit/' + b.hash;
   el.innerHTML =
     'v' + b.version +
     ' · <a href="' + commitURL + '" target="_blank" rel="noopener">' + b.hash + '</a>' +
