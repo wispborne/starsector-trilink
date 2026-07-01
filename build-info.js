@@ -4,4 +4,4 @@
  * the commit this build sits on top of; `date` is when it was stamped.
  * Loaded as a plain global, same as config.js. See README "Version stamp".
  */
-self.BUILD_INFO = { version: 20, hash: "dff8883", date: "2026-07-01" };
+self.BUILD_INFO = { version: 21, hash: "d328c1b", date: "2026-07-01" };
