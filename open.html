@@ -58,7 +58,74 @@
     </footer>
   </main>
 
+  <footer class="site-footer">
+    <nav class="footer-row footer-tools">
+      <a href="https://github.com/wispborne/starsector-install-link" target="_blank" rel="noopener" class="footer-util">
+        <span class="material-icons">code</span> Source code
+      </a>
+      <button type="button" id="open-licenses" class="footer-link-btn footer-util">
+        <span class="material-icons">description</span> Licenses
+      </button>
+      <span class="footer-divider" aria-hidden="true"></span>
+      <span class="footer-label">More by Wisp</span>
+      <a href="https://fractalsoftworks.com/forum/index.php?topic=29674" target="_blank" rel="noopener">TriOS</a>
+      <a href="https://starmodder.pages.dev/" target="_blank" rel="noopener">StarModder</a>
+      <a href="https://chipper.pages.dev/" target="_blank" rel="noopener">Chipper</a>
+    </nav>
+    <nav>
+      <span class="footer-label">Not affiliated with Fractal Softworks</span>
+    </nav>
+    <nav class="footer-row footer-meta">
+      <span class="footer-label" id="build-version"></span>
+    </nav>
+  </footer>
+
+  <dialog id="license-dialog" class="license-dialog">
+    <div class="license-dialog-head">
+      <h2>Third-party licenses</h2>
+      <button type="button" id="close-licenses" class="license-close" aria-label="Close licenses">
+        <span class="material-icons">close</span>
+      </button>
+    </div>
+    <div class="license-body">
+      <section>
+        <h3>Hjson <span class="license-tag">v3.2.1 &middot; MIT</span></h3>
+        <p class="license-note">Parses <code>.version</code> and <code>mod_info.json</code> files, which aren't strict
+          JSON. <a href="https://github.com/hjson/hjson-js" target="_blank" rel="noopener">hjson/hjson-js</a></p>
+        <pre>MIT License
+
+Copyright (c) 2014-2017 Christian Zangl
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</pre>
+      </section>
+      <section>
+        <h3>Roboto &amp; Material Icons <span class="license-tag">Apache 2.0</span></h3>
+        <p class="license-note">Fonts served by Google Fonts. Licensed under the
+          <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noopener">Apache License,
+            Version 2.0</a>.
+        </p>
+      </section>
+    </div>
+  </dialog>
+
   <script src="config.js"></script>
+  <script src="build-info.js"></script>
   <script src="vendor/hjson.min.js"></script>
   <script src="version.js"></script>
   <script src="deeplink.js"></script>

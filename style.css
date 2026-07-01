@@ -354,6 +354,28 @@ input[type="url"]:focus {
   margin-bottom: 10px;
 }
 
+/* Preview: the primary "go see it" action, so it stands out from the plain
+   copy button — accent outline + faint fill, filling solid on hover. */
+.btn-copy.btn-preview {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  font-size: 14px;
+}
+
+.btn-copy.btn-preview:hover {
+  background: var(--accent);
+  color: var(--surface);
+}
+
+.btn-copy.btn-preview:disabled {
+  color: var(--on-surface-dim);
+  border-color: var(--surface-high);
+  background: transparent;
+}
+
+.btn-copy.btn-preview .material-icons { font-size: 18px; }
+
 .stack-layout {
   display: grid;
   grid-template-columns: 200px 1fr;
@@ -975,13 +997,15 @@ textarea:focus {
 
 .launcher-body {
   display: flex;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column;
   min-height: 100vh;
   padding: 24px;
 }
 
+/* margin:auto centers the card in the free space and pushes the site footer
+   (a sibling flex item) to the bottom of the viewport. */
 .launcher {
+  margin: auto;
   width: 100%;
   max-width: 460px;
 }
@@ -1304,8 +1328,18 @@ textarea:focus {
 
 .site-footer .material-icons { font-size: 16px; }
 
-.footer-tools a { font-weight: 500; color: var(--on-surface); }
-.footer-tools a:hover { color: var(--accent); }
+/* The "More by Wisp" mod links read as primary; Source code / Licenses stay
+   dim utility links (via .footer-util), so exclude them from this brightening. */
+.footer-tools a:not(.footer-util) { font-weight: 500; color: var(--on-surface); }
+.footer-tools a:not(.footer-util):hover { color: var(--accent); }
+
+/* Thin vertical rule separating the utility links from "More by Wisp". */
+.footer-divider {
+  width: 1px;
+  align-self: stretch;
+  min-height: 14px;
+  background: var(--surface-high);
+}
 
 .footer-meta { color: var(--on-surface-dim); }
 

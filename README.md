@@ -170,6 +170,23 @@ If you prefer a local server, any static server works, for example:
 npx serve .
 ```
 
+## Version stamp
+
+The number at the bottom of the page (`v19 · 694e24b · 2026-07-01`) is stamped automatically
+by a Git hook. Enable it once per clone:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+After that, every commit runs [.githooks/pre-commit](.githooks/pre-commit), which writes
+`build-info.js` with the running commit count, the current short hash, and the date, and stages
+it into the commit. Nothing to bump by hand — the number ticks by one each commit.
+
+Note: a commit can't contain its own hash (the hash is computed from the file, so writing it
+would change it), so `hash` points at the commit the build sits on top of. If you ever want it
+to match byte-for-byte, stamp at deploy time in CI instead of a local hook.
+
 ## Deploy to GitHub Pages
 
 Push this folder to a repo and enable Pages (serve from the root). All asset paths are relative,

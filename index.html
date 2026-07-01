@@ -133,10 +133,10 @@
 
           <label style="margin-top:16px">Badge style</label>
           <div id="install-styles" class="style-options">
-            <button type="button" class="style-option selected" data-style="" title="Flat">
+            <button type="button" class="style-option" data-style="" title="Flat">
               <img src="badges/install-badge.svg" alt="Flat badge style">
             </button>
-            <button type="button" class="style-option" data-style="-forthebadge" title="For the badge">
+            <button type="button" class="style-option selected" data-style="-forthebadge" title="For the badge">
               <img src="badges/install-badge-forthebadge.svg" alt="For-the-badge style">
             </button>
           </div>
@@ -169,6 +169,9 @@
           <ol class="how-to" style="counter-reset: step 4; margin-top: 20px">
             <li><strong>Test it!</strong> Note: requires TriOS 1.6.0 or later.</li>
           </ol>
+          <button id="preview-install" class="btn-copy btn-copy-block btn-preview" style="margin-top:10px" disabled>
+            <span class="material-icons">open_in_new</span> Preview link
+          </button>
         </div>
       </div>
 
@@ -287,21 +290,23 @@
 
   <footer class="site-footer">
     <nav class="footer-row footer-tools">
+      <a href="https://github.com/wispborne/starsector-install-link" target="_blank" rel="noopener" class="footer-util">
+        <span class="material-icons">code</span> Source code
+      </a>
+      <button type="button" id="open-licenses" class="footer-link-btn footer-util">
+        <span class="material-icons">description</span> Licenses
+      </button>
+      <span class="footer-divider" aria-hidden="true"></span>
       <span class="footer-label">More by Wisp</span>
       <a href="https://fractalsoftworks.com/forum/index.php?topic=29674" target="_blank" rel="noopener">TriOS</a>
       <a href="https://starmodder.pages.dev/" target="_blank" rel="noopener">StarModder</a>
       <a href="https://chipper.pages.dev/" target="_blank" rel="noopener">Chipper</a>
     </nav>
-    <nav class="footer-row footer-meta">
-      <a href="https://github.com/wispborne/starsector-install-link" target="_blank" rel="noopener">
-        <span class="material-icons">code</span> Source code
-      </a>
-      <button type="button" id="open-licenses" class="footer-link-btn">
-        <span class="material-icons">description</span> Licenses
-      </button>
-    </nav>
     <nav>
       <span class="footer-label">Not affiliated with Fractal Softworks</span>
+    </nav>
+    <nav class="footer-row footer-meta">
+      <span class="footer-label" id="build-version"></span>
     </nav>
   </footer>
 
@@ -350,6 +355,7 @@ SOFTWARE.</pre>
   </dialog>
 
   <script src="config.js"></script>
+  <script src="build-info.js"></script>
   <script src="vendor/hjson.min.js"></script>
   <script src="version.js"></script>
   <script src="deeplink.js"></script>
